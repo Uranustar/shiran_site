@@ -38,6 +38,8 @@ function DonatePage() {
   const [custom, setCustom] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [monthly, setMonthly] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const amount = custom ? Number(custom) : selected ?? 0;
 
