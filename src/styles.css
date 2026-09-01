@@ -36,6 +36,8 @@
   --color-sun-foreground: var(--sun-foreground);
   --color-leaf: var(--leaf);
   --color-leaf-foreground: var(--leaf-foreground);
+  --color-blossom: var(--blossom);
+  --color-sage: var(--sage);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
