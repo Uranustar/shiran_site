@@ -175,6 +175,7 @@ function DonatePage() {
               <div>
                 <label className="text-sm font-semibold text-foreground">הודעה (לא חובה)</label>
                 <textarea
+                  name="dedication"
                   rows={3}
                   placeholder="ברצוני להקדיש את התרומה ל…"
                   className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
