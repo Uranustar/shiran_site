@@ -185,12 +185,13 @@ function DonatePage() {
                 <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
                 קראתי ואישרתי את תקנון העמותה ואת תנאי התרומה.
               </label>
+              {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
               <button
                 type="submit"
-                disabled={!amount}
+                disabled={!amount || sending}
                 className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-50"
               >
-                <Heart className="h-5 w-5" /> לתרומה ₪{amount || "—"}{monthly ? " / חודש" : ""}
+                <Heart className="h-5 w-5" /> {sending ? "שולח…" : <>לתרומה ₪{amount || "—"}{monthly ? " / חודש" : ""}</>}
               </button>
               <p className="text-center text-xs text-muted-foreground">
                 אישור תרומה לפי סעיף 46 לפקודת מס הכנסה. תשלום מאובטח.
