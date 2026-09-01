@@ -1,20 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Heart, Users, LifeBuoy, Brain, HandHeart, Sparkles, ArrowLeft } from "../components/icons";
 
 export const Route = createFileRoute("/volunteer")({
   head: () => ({
     meta: [
-      { title: "התנדבות — אור בנפש" },
+      { title: "התנדבות — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "הצטרפו למעגל התמיכה של אור בנפש — התנדבות כמלווה, בקו החירום, בקהילה ועוד.",
+          "הצטרפו למעגל התמיכה של מצמיחים מהלב — התנדבות כמלווה, בקו החירום, בקהילה ועוד.",
       },
-      { property: "og:title", content: "התנדבות — אור בנפש" },
+      { property: "og:title", content: "התנדבות — מצמיחים מהלב" },
       {
         property: "og:description",
-        content: "הצטרפו למעגל התמיכה של אור בנפש — שעות של משמעות.",
+        content: "הצטרפו למעגל התמיכה של מצמיחים מהלב — שעות של משמעות.",
       },
     ],
   }),
@@ -38,6 +39,28 @@ const toneRing: Record<string, string> = {
 
 function VolunteerPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("volunteer_applications").insert({
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      role: String(fd.get("role") ?? ""),
+      message: String(fd.get("message") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשליחה. אפשר לנסות שוב.");
+      return;
+    }
+    setSubmitted(true);
+  }
 
   return (
     <div>
@@ -47,7 +70,7 @@ function VolunteerPage() {
           <span className="text-sm font-bold uppercase tracking-wider text-primary">התנדבות</span>
           <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">שעות של משמעות</h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            הצטרפו למעגל התמיכה של אור בנפש. כל שעת התנדבות היא עוד אדם שלא נשאר לבד.
+            הצטרפו למעגל התמיכה של מצמיחים מהלב. כל שעת התנדבות היא עוד אדם שלא נשאר לבד.
           </p>
         </div>
       </section>
@@ -118,13 +141,7 @@ function VolunteerPage() {
             <div className="rounded-[2rem] border border-border bg-card p-6 shadow-card sm:p-8">
               <h2 className="font-display text-2xl font-black text-foreground">טופס הרשמה להתנדבות</h2>
               <p className="mt-1 text-sm text-muted-foreground">הפרטים נשמרים בדיסקרטיות מלאה.</p>
-              <form
-                className="mt-6 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSubmitted(true);
-                }}
-              >
+              <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                 <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="דוא״ל" name="email" type="email" placeholder="you@example.com" />
@@ -134,6 +151,7 @@ function VolunteerPage() {
                   <label htmlFor="role" className="text-sm font-semibold text-foreground">תחום התנדבות מועדף</label>
                   <select
                     id="role"
+                    name="role"
                     className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option>מלווה אישי</option>
@@ -148,17 +166,21 @@ function VolunteerPage() {
                   <label htmlFor="exp" className="text-sm font-semibold text-foreground">ניסיון רלוונטי (לא חובה)</label>
                   <textarea
                     id="exp"
+                    name="message"
                     rows={3}
                     placeholder="ספרו לנו בקצרה על ניסיונכם או זמינותכם"
                     className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
+                {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
                 <button
                   type="submit"
-                  className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90"
+                  disabled={sending}
+                  className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60"
                 >
-                  <Heart className="h-5 w-5" /> שליחת הטופס
+                  <Heart className="h-5 w-5" /> {sending ? "שולח…" : "שליחת הטופס"}
                 </button>
+
               </form>
             </div>
           )}

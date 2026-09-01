@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Phone, Mail, MapPin, Heart, MessageCircle, LifeBuoy } from "../components/icons";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "צור קשר — אור בנפש" },
+      { title: "צור קשר — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "צרו קשר עם אור בנפש — קו חירום, וואטסאפ, דוא״ל וכתובת. הפנייה דיסקרטית ומכבדת.",
+          "צרו קשר עם מצמיחים מהלב — קו חירום, וואטסאפ, דוא״ל וכתובת. הפנייה דיסקרטית ומכבדת.",
       },
-      { property: "og:title", content: "צור קשר — אור בנפש" },
+      { property: "og:title", content: "צור קשר — מצמיחים מהלב" },
       {
         property: "og:description",
         content: "קו חירום, וואטסאפ ופנייה דיסקרטית — אנחנו כאן בשבילך.",
@@ -35,6 +36,28 @@ const toneRing: Record<string, string> = {
 
 function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("contact_messages").insert({
+      name: String(fd.get("name") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      topic: String(fd.get("topic") ?? ""),
+      message: String(fd.get("message") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשליחה. אפשר לנסות שוב או להתקשר אלינו.");
+      return;
+    }
+    setSubmitted(true);
+  }
 
   return (
     <div>
@@ -93,13 +116,7 @@ function ContactPage() {
               <>
                 <h2 className="font-display text-2xl font-black text-foreground">שלחו לנו הודעה</h2>
                 <p className="mt-1 text-sm text-muted-foreground">כל פנייה נענית בדיסקרטיות מלאה.</p>
-                <form
-                  className="mt-6 space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSubmitted(true);
-                  }}
-                >
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
                     <Field label="טלפון" name="phone" type="tel" placeholder="050-0000000" />
@@ -109,6 +126,7 @@ function ContactPage() {
                     <label htmlFor="topic" className="text-sm font-semibold text-foreground">נושא הפנייה</label>
                     <select
                       id="topic"
+                      name="topic"
                       className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option>בקשת סיוע / ליווי</option>
@@ -122,6 +140,7 @@ function ContactPage() {
                     <label htmlFor="msg" className="text-sm font-semibold text-foreground">הודעה</label>
                     <textarea
                       id="msg"
+                      name="message"
                       required
                       rows={5}
                       placeholder="ספרו לנו בקצרה כיצד נוכל לסייע"
@@ -130,14 +149,17 @@ function ContactPage() {
                   </div>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground">
                     <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
-                    אישרתי שאור בנפש תיצור איתי קשר בנוגע לפנייתי.
+                    אישרתי שמצמיחים מהלב תיצור איתי קשר בנוגע לפנייתי.
                   </label>
+                  {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
                   <button
                     type="submit"
-                    className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90"
+                    disabled={sending}
+                    className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60"
                   >
-                    <Heart className="h-5 w-5" /> שליחת ההודעה
+                    <Heart className="h-5 w-5" /> {sending ? "שולח…" : "שליחת ההודעה"}
                   </button>
+
                 </form>
               </>
             )}

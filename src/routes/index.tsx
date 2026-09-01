@@ -16,13 +16,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "אור בנפש — עמותה לתמיכה במתמודדי נפש" },
+      { title: "מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש" },
       {
         name: "description",
         content:
-          "אור בנפש היא עמותה לתמיכה במתמודדי נפש. ליווי אישי, ייעוץ מקצועי, קבוצות תמיכה וקהילה — לא תהיו לבד בדרך.",
+          "מצמיחים מהלב היא עמותה לתמיכה במתמודדי נפש. ליווי אישי, ייעוץ מקצועי, קבוצות תמיכה וקהילה — לא תהיו לבד בדרך.",
       },
-      { property: "og:title", content: "אור בנפש — עמותה לתמיכה במתמודדי נפש" },
+      { property: "og:title", content: "מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש" },
       {
         property: "og:description",
         content: "ליווי, ייעוץ וקהילה בדרך לריפוי. לא תהיו לבד בדרך.",
@@ -146,7 +146,7 @@ function HomePage() {
               כל אדם ראוי לתמיכה, לקשב ולתקווה
             </h2>
             <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-              אור בנפש נולדה מתוך האמונה שריפוי מתחיל בקשר. אנו מלווים מתמודדי נפש
+              מצמיחים מהלב נולדה מתוך האמונה שריפוי מתחיל בקשר. אנו מלווים מתמודדי נפש
               ובני משפחותיהם בליווי אישי וקבוצתי, בייעוץ מקצועי ובקהילה מכילה —
               כדי שאף אחד לא יישאר לבד מול האתגרים שבדרך.
             </p>
@@ -289,7 +289,7 @@ function HomePage() {
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <Quote className="mx-auto h-12 w-12 text-primary/30" />
           <blockquote className="mt-6 font-display text-2xl font-700 leading-relaxed text-foreground sm:text-3xl">
-            "כשהגעתי לאור בנפש הרגשתי שלראשונה מישהו באמת שומע אותי. הליווי
+            "כשהגעתי למצמיחים מהלב הרגשתי שלראשונה מישהו באמת שומע אותי. הליווי
             החזיר לי את התקווה ואת הקול שלי."
           </blockquote>
           <p className="mt-6 text-sm font-semibold text-muted-foreground">

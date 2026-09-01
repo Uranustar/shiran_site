@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Heart, Sparkles, Users, LifeBuoy } from "../components/icons";
 
 export const Route = createFileRoute("/donate")({
   head: () => ({
     meta: [
-      { title: "תרומות — אור בנפש" },
+      { title: "תרומות — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש. תרמו לאור בנפש.",
+          "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש. תרמו למצמיחים מהלב.",
       },
-      { property: "og:title", content: "תרומות — אור בנפש" },
+      { property: "og:title", content: "תרומות — מצמיחים מהלב" },
       {
         property: "og:description",
         content: "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש.",
@@ -38,8 +39,33 @@ function DonatePage() {
   const [custom, setCustom] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [monthly, setMonthly] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const amount = custom ? Number(custom) : selected ?? 0;
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!(amount > 0)) return;
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("donations").insert({
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      amount,
+      monthly,
+      dedication: String(fd.get("dedication") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשמירת התרומה. אפשר לנסות שוב.");
+      return;
+    }
+    setSubmitted(true);
+  }
+
 
   if (submitted) {
     return (
@@ -142,19 +168,14 @@ function DonatePage() {
           <div className="rounded-[2rem] border border-border bg-card p-6 shadow-card sm:p-8">
             <h2 className="font-display text-xl font-extrabold text-foreground">פרטי התרומה</h2>
             <p className="mt-1 text-sm text-muted-foreground">תרומה בגובה ₪{amount || "—"}{monthly ? " / חודש" : ""}</p>
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (amount > 0) setSubmitted(true);
-              }}
-            >
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
               <Field label="דוא״ל" name="email" type="email" placeholder="you@example.com" />
               <Field label="טלפון" name="phone" type="tel" placeholder="050-0000000" />
               <div>
                 <label className="text-sm font-semibold text-foreground">הודעה (לא חובה)</label>
                 <textarea
+                  name="dedication"
                   rows={3}
                   placeholder="ברצוני להקדיש את התרומה ל…"
                   className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
@@ -164,12 +185,13 @@ function DonatePage() {
                 <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
                 קראתי ואישרתי את תקנון העמותה ואת תנאי התרומה.
               </label>
+              {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
               <button
                 type="submit"
-                disabled={!amount}
+                disabled={!amount || sending}
                 className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-50"
               >
-                <Heart className="h-5 w-5" /> לתרומה ₪{amount || "—"}{monthly ? " / חודש" : ""}
+                <Heart className="h-5 w-5" /> {sending ? "שולח…" : <>לתרומה ₪{amount || "—"}{monthly ? " / חודש" : ""}</>}
               </button>
               <p className="text-center text-xs text-muted-foreground">
                 אישור תרומה לפי סעיף 46 לפקודת מס הכנסה. תשלום מאובטח.
