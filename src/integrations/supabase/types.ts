@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          name: string
+          phone: string | null
+          topic: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          phone?: string | null
+          topic?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          topic?: string | null
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          created_at: string
+          dedication: string | null
+          email: string | null
+          id: string
+          monthly: boolean
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          dedication?: string | null
+          email?: string | null
+          id?: string
+          monthly?: boolean
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          dedication?: string | null
+          email?: string | null
+          id?: string
+          monthly?: boolean
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      volunteer_applications: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
