@@ -116,13 +116,7 @@ function ContactPage() {
               <>
                 <h2 className="font-display text-2xl font-black text-foreground">שלחו לנו הודעה</h2>
                 <p className="mt-1 text-sm text-muted-foreground">כל פנייה נענית בדיסקרטיות מלאה.</p>
-                <form
-                  className="mt-6 space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSubmitted(true);
-                  }}
-                >
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
                     <Field label="טלפון" name="phone" type="tel" placeholder="050-0000000" />
