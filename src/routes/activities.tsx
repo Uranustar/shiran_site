@@ -4,13 +4,13 @@ import { Brain, LifeBuoy, Users, HandHeart, Sparkles, Heart, ArrowLeft, Sun, Lea
 export const Route = createFileRoute("/activities")({
   head: () => ({
     meta: [
-      { title: "תחומי תמיכה — אור בנפש" },
+      { title: "תחומי תמיכה — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "ליווי אישי, ייעוץ מקצועי, קבוצות תמיכה, קו חירום, ליווי משפחתי וקהילה — תחומי התמיכה של אור בנפש.",
+          "ליווי אישי, ייעוץ מקצועי, קבוצות תמיכה, קו חירום, ליווי משפחתי וקהילה — תחומי התמיכה של מצמיחים מהלב.",
       },
-      { property: "og:title", content: "תחומי תמיכה — אור בנפש" },
+      { property: "og:title", content: "תחומי תמיכה — מצמיחים מהלב" },
       {
         property: "og:description",
         content: "ליווי, ייעוץ, קבוצות תמיכה וקהילה למתמודדי נפש.",

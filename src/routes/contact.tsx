@@ -5,13 +5,13 @@ import { Phone, Mail, MapPin, Heart, MessageCircle, LifeBuoy } from "../componen
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "צור קשר — אור בנפש" },
+      { title: "צור קשר — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "צרו קשר עם אור בנפש — קו חירום, וואטסאפ, דוא״ל וכתובת. הפנייה דיסקרטית ומכבדת.",
+          "צרו קשר עם מצמיחים מהלב — קו חירום, וואטסאפ, דוא״ל וכתובת. הפנייה דיסקרטית ומכבדת.",
       },
-      { property: "og:title", content: "צור קשר — אור בנפש" },
+      { property: "og:title", content: "צור קשר — מצמיחים מהלב" },
       {
         property: "og:description",
         content: "קו חירום, וואטסאפ ופנייה דיסקרטית — אנחנו כאן בשבילך.",
@@ -130,7 +130,7 @@ function ContactPage() {
                   </div>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground">
                     <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
-                    אישרתי שאור בנפש תיצור איתי קשר בנוגע לפנייתי.
+                    אישרתי שמצמיחים מהלב תיצור איתי קשר בנוגע לפנייתי.
                   </label>
                   <button
                     type="submit"

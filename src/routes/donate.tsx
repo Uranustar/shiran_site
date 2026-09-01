@@ -5,13 +5,13 @@ import { Heart, Sparkles, Users, LifeBuoy } from "../components/icons";
 export const Route = createFileRoute("/donate")({
   head: () => ({
     meta: [
-      { title: "תרומות — אור בנפש" },
+      { title: "תרומות — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש. תרמו לאור בנפש.",
+          "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש. תרמו למצמיחים מהלב.",
       },
-      { property: "og:title", content: "תרומות — אור בנפש" },
+      { property: "og:title", content: "תרומות — מצמיחים מהלב" },
       {
         property: "og:description",
         content: "התרומה שלך מאפשרת ליווי, ייעוץ וקהילה למתמודדי נפש.",

@@ -5,16 +5,16 @@ import { Heart, Users, LifeBuoy, Brain, HandHeart, Sparkles, ArrowLeft } from ".
 export const Route = createFileRoute("/volunteer")({
   head: () => ({
     meta: [
-      { title: "התנדבות — אור בנפש" },
+      { title: "התנדבות — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "הצטרפו למעגל התמיכה של אור בנפש — התנדבות כמלווה, בקו החירום, בקהילה ועוד.",
+          "הצטרפו למעגל התמיכה של מצמיחים מהלב — התנדבות כמלווה, בקו החירום, בקהילה ועוד.",
       },
-      { property: "og:title", content: "התנדבות — אור בנפש" },
+      { property: "og:title", content: "התנדבות — מצמיחים מהלב" },
       {
         property: "og:description",
-        content: "הצטרפו למעגל התמיכה של אור בנפש — שעות של משמעות.",
+        content: "הצטרפו למעגל התמיכה של מצמיחים מהלב — שעות של משמעות.",
       },
     ],
   }),
@@ -47,7 +47,7 @@ function VolunteerPage() {
           <span className="text-sm font-bold uppercase tracking-wider text-primary">התנדבות</span>
           <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">שעות של משמעות</h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            הצטרפו למעגל התמיכה של אור בנפש. כל שעת התנדבות היא עוד אדם שלא נשאר לבד.
+            הצטרפו למעגל התמיכה של מצמיחים מהלב. כל שעת התנדבות היא עוד אדם שלא נשאר לבד.
           </p>
         </div>
       </section>

@@ -94,8 +94,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "description", content: "אור בנפש — עמותה לתמיכה במתמודדי נפש. ליווי, ייעוץ וקהילה בדרך לריפוי." },
-      { property: "og:title", content: "אור בנפש — עמותה לתמיכה במתמודדי נפש" },
+      { name: "description", content: "מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש. ליווי, ייעוץ וקהילה בדרך לריפוי." },
+      { property: "og:title", content: "מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש" },
       { property: "og:description", content: "ליווי, ייעוץ וקהילה בדרך לריפוי. לא תהיו לבד." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -156,7 +156,7 @@ function SiteChrome() {
             <Heart className="h-6 w-6" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="font-display text-xl font-black text-foreground">אור בנפש</span>
+            <span className="font-display text-xl font-black text-foreground">מצמיחים מהלב</span>
             <span className="text-xs text-muted-foreground">עמותה לתמיכה במתמודדי נפש</span>
           </span>
         </Link>
@@ -287,7 +287,7 @@ function SiteFooter() {
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
               <Heart className="h-6 w-6" />
             </span>
-            <span className="font-display text-xl font-black text-foreground">אור בנפש</span>
+            <span className="font-display text-xl font-black text-foreground">מצמיחים מהלב</span>
           </Link>
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
             עמותה לתמיכה במתמודדי נפש. אנו מלווים אנשים ומשפחות בדרך לריפוי באהבה,
@@ -331,7 +331,7 @@ function SiteFooter() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} אור בנפש — עמותה רשומה. כל הזכויות שמורות.</p>
+          <p>© {new Date().getFullYear()} מצמיחים מהלב — עמותה רשומה. כל הזכויות שמורות.</p>
           <p className="flex items-center gap-1">
             נבנה באהבה <Heart className="h-3.5 w-3.5 text-primary" />
           </p>

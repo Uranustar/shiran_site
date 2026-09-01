@@ -4,16 +4,16 @@ import { Heart, Brain, Users, LifeBuoy, Sparkles, ArrowLeft, HandHeart } from ".
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "אודות — אור בנפש" },
+      { title: "אודות — מצמיחים מהלב" },
       {
         name: "description",
         content:
-          "הסיפור, המסר והערכים של אור בנפש — עמותה לתמיכה במתמודדי נפש.",
+          "הסיפור, המסר והערכים של מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש.",
       },
-      { property: "og:title", content: "אודות — אור בנפש" },
+      { property: "og:title", content: "אודות — מצמיחים מהלב" },
       {
         property: "og:description",
-        content: "הסיפור, המסר והערכים של אור בנפש — עמותה לתמיכה במתמודדי נפש.",
+        content: "הסיפור, המסר והערכים של מצמיחים מהלב — עמותה לתמיכה במתמודדי נפש.",
       },
     ],
   }),
@@ -48,7 +48,7 @@ function AboutPage() {
             קמנו כדי שאף אחד לא יישאר לבד
           </h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            אור בנפש היא עמותה התנדבותית שהוקמה מתוך ידיעה עמוקה: ריפוי מתחיל בקשר.
+            מצמיחים מהלב היא עמותה התנדבותית שהוקמה מתוך ידיעה עמוקה: ריפוי מתחיל בקשר.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ function AboutPage() {
             <h2 className="font-display text-3xl font-black text-foreground">הסיפור שלנו</h2>
             <div className="mt-5 space-y-4 text-base leading-relaxed text-muted-foreground">
               <p>
-                אור בנפש נולדה מתוך חוויה אישית — משפחה שחיפשה תמיכה ולא מצאה כתף
+                מצמיחים מהלב נולדה מתוך חוויה אישית — משפחה שחיפשה תמיכה ולא מצאה כתף
                 אנושית שתחזיק אותה. הבנו שבין הקליניקה לבין הבידוד יש מרחב שלם של
                 קשר, קשב וקהילה — והחלטנו לבנות אותו.
               </p>
