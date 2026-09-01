@@ -142,13 +142,7 @@ function DonatePage() {
           <div className="rounded-[2rem] border border-border bg-card p-6 shadow-card sm:p-8">
             <h2 className="font-display text-xl font-extrabold text-foreground">פרטי התרומה</h2>
             <p className="mt-1 text-sm text-muted-foreground">תרומה בגובה ₪{amount || "—"}{monthly ? " / חודש" : ""}</p>
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (amount > 0) setSubmitted(true);
-              }}
-            >
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
               <Field label="דוא״ל" name="email" type="email" placeholder="you@example.com" />
               <Field label="טלפון" name="phone" type="tel" placeholder="050-0000000" />
