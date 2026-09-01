@@ -38,6 +38,28 @@ const toneRing: Record<string, string> = {
 
 function VolunteerPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("volunteer_applications").insert({
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      role: String(fd.get("role") ?? ""),
+      message: String(fd.get("message") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשליחה. אפשר לנסות שוב.");
+      return;
+    }
+    setSubmitted(true);
+  }
 
   return (
     <div>
