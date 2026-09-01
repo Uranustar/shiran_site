@@ -66,35 +66,37 @@
   --primary: oklch(0.72 0.105 200);
   --primary-foreground: oklch(0.99 0.01 95);
 
-  /* Secondary: soft leaf green surface */
-  --secondary: oklch(0.93 0.05 150);
-  --secondary-foreground: oklch(0.32 0.07 150);
+  /* Secondary: soft blush surface */
+  --secondary: oklch(0.94 0.035 15);
+  --secondary-foreground: oklch(0.4 0.07 15);
 
-  --muted: oklch(0.96 0.025 95);
-  --muted-foreground: oklch(0.5 0.04 200);
+  --muted: oklch(0.96 0.02 40);
+  --muted-foreground: oklch(0.52 0.035 200);
 
   /* Accent: sun yellow */
-  --accent: oklch(0.93 0.12 88);
+  --accent: oklch(0.93 0.11 88);
   --accent-foreground: oklch(0.38 0.08 75);
 
-  /* Named summer swatches */
-  --sun: oklch(0.9 0.14 88);
+  /* Named summer swatches — "leaf" now reads as a soft blossom pink */
+  --sun: oklch(0.9 0.13 88);
   --sun-foreground: oklch(0.36 0.09 70);
-  --leaf: oklch(0.8 0.12 150);
-  --leaf-foreground: oklch(0.99 0.01 95);
+  --leaf: oklch(0.82 0.085 12);
+  --leaf-foreground: oklch(0.42 0.09 12);
+  --blossom: oklch(0.85 0.075 355);
+  --sage: oklch(0.84 0.06 150);
 
   --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.99 0.01 95);
 
-  --border: oklch(0.9 0.035 95);
-  --input: oklch(0.9 0.035 95);
+  --border: oklch(0.91 0.025 40);
+  --input: oklch(0.91 0.025 40);
   --ring: oklch(0.72 0.105 200);
 
   --gradient-hero: linear-gradient(180deg,
-    color-mix(in oklab, var(--primary) 55%, transparent) 0%,
-    color-mix(in oklab, var(--primary) 20%, transparent) 60%,
+    color-mix(in oklab, var(--primary) 50%, transparent) 0%,
+    color-mix(in oklab, var(--blossom) 22%, transparent) 60%,
     transparent 100%);
-  --gradient-sun: linear-gradient(135deg, var(--sun), var(--leaf));
+  --gradient-sun: linear-gradient(135deg, var(--sun), var(--blossom));
 }
 
 @layer base {
