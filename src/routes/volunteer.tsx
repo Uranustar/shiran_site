@@ -118,13 +118,7 @@ function VolunteerPage() {
             <div className="rounded-[2rem] border border-border bg-card p-6 shadow-card sm:p-8">
               <h2 className="font-display text-2xl font-black text-foreground">טופס הרשמה להתנדבות</h2>
               <p className="mt-1 text-sm text-muted-foreground">הפרטים נשמרים בדיסקרטיות מלאה.</p>
-              <form
-                className="mt-6 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSubmitted(true);
-                }}
-              >
+              <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                 <Field label="שם מלא" name="name" placeholder="ישראל ישראלי" />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="דוא״ל" name="email" type="email" placeholder="you@example.com" />
@@ -134,6 +128,7 @@ function VolunteerPage() {
                   <label htmlFor="role" className="text-sm font-semibold text-foreground">תחום התנדבות מועדף</label>
                   <select
                     id="role"
+                    name="role"
                     className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option>מלווה אישי</option>
@@ -148,17 +143,21 @@ function VolunteerPage() {
                   <label htmlFor="exp" className="text-sm font-semibold text-foreground">ניסיון רלוונטי (לא חובה)</label>
                   <textarea
                     id="exp"
+                    name="message"
                     rows={3}
                     placeholder="ספרו לנו בקצרה על ניסיונכם או זמינותכם"
                     className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
+                {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
                 <button
                   type="submit"
-                  className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90"
+                  disabled={sending}
+                  className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60"
                 >
-                  <Heart className="h-5 w-5" /> שליחת הטופס
+                  <Heart className="h-5 w-5" /> {sending ? "שולח…" : "שליחת הטופס"}
                 </button>
+
               </form>
             </div>
           )}
