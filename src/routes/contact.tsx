@@ -126,6 +126,7 @@ function ContactPage() {
                     <label htmlFor="topic" className="text-sm font-semibold text-foreground">נושא הפנייה</label>
                     <select
                       id="topic"
+                      name="topic"
                       className="mt-2 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option>בקשת סיוע / ליווי</option>
@@ -139,6 +140,7 @@ function ContactPage() {
                     <label htmlFor="msg" className="text-sm font-semibold text-foreground">הודעה</label>
                     <textarea
                       id="msg"
+                      name="message"
                       required
                       rows={5}
                       placeholder="ספרו לנו בקצרה כיצד נוכל לסייע"
@@ -149,12 +151,15 @@ function ContactPage() {
                     <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
                     אישרתי שמצמיחים מהלב תיצור איתי קשר בנוגע לפנייתי.
                   </label>
+                  {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
                   <button
                     type="submit"
-                    className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90"
+                    disabled={sending}
+                    className="btn-pill inline-flex w-full items-center justify-center gap-2 bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60"
                   >
-                    <Heart className="h-5 w-5" /> שליחת ההודעה
+                    <Heart className="h-5 w-5" /> {sending ? "שולח…" : "שליחת ההודעה"}
                   </button>
+
                 </form>
               </>
             )}
