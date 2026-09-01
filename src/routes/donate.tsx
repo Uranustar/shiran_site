@@ -43,6 +43,29 @@ function DonatePage() {
 
   const amount = custom ? Number(custom) : selected ?? 0;
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!(amount > 0)) return;
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("donations").insert({
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      amount,
+      monthly,
+      dedication: String(fd.get("dedication") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשמירת התרומה. אפשר לנסות שוב.");
+      return;
+    }
+    setSubmitted(true);
+  }
+
+
   if (submitted) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
