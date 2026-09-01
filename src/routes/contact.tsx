@@ -35,6 +35,28 @@ const toneRing: Record<string, string> = {
 
 function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSending(true);
+    setError(null);
+    const fd = new FormData(e.currentTarget);
+    const { error: err } = await supabase.from("contact_messages").insert({
+      name: String(fd.get("name") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      topic: String(fd.get("topic") ?? ""),
+      message: String(fd.get("message") ?? ""),
+    });
+    setSending(false);
+    if (err) {
+      setError("אירעה תקלה בשליחה. אפשר לנסות שוב או להתקשר אלינו.");
+      return;
+    }
+    setSubmitted(true);
+  }
 
   return (
     <div>
