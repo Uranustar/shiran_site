@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Heart, Users, LifeBuoy, Brain, HandHeart, Sparkles, ArrowLeft } from "../components/icons";
 
 export const Route = createFileRoute("/volunteer")({
