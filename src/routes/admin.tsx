@@ -1,21 +1,74 @@
- import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import type { FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
+// =========================
+// TYPES
+// =========================
+
 type SiteContentRow = {
   section: string;
   content: Record<string, unknown>;
 };
 
+type ContactMessage = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  topic: string | null;
+  message: string;
+  created_at: string;
+};
+
+type Donation = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  amount: number;
+  monthly: boolean;
+  dedication: string | null;
+  created_at: string;
+};
+
+type VolunteerApplication = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
+  message: string | null;
+  created_at: string;
+};
+
+type AdminSection =
+  | "content"
+  | "messages"
+  | "donations"
+  | "volunteers";
+
+// =========================
+// MAIN
+// =========================
+
 function AdminPage() {
   const [sections, setSections] = useState<SiteContentRow[]>([]);
   const [selectedSection, setSelectedSection] = useState("");
+
   const [editorValue, setEditorValue] = useState("");
+
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [volunteers, setVolunteers] = useState<VolunteerApplication[]>([]);
+
+  const [activeSection, setActiveSection] =
+    useState<AdminSection>("content");
 
   const [loading, setLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -36,6 +89,7 @@ function AdminPage() {
   // =========================
   // בדיקת משתמש והרשאת מנהל
   // =========================
+
   async function checkAdmin() {
     setCheckingAuth(true);
     setError("");
@@ -45,7 +99,6 @@ function AdminPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // אין משתמש מחובר
       if (!user) {
         setIsAdmin(false);
         setCheckingAuth(false);
@@ -53,7 +106,6 @@ function AdminPage() {
         return;
       }
 
-      // בדיקה מול admin_users
       const { data: admin, error: adminError } = await supabase
         .from("admin_users")
         .select("user_id")
@@ -70,7 +122,6 @@ function AdminPage() {
         return;
       }
 
-      // משתמש מחובר אבל לא מנהל
       if (!admin) {
         await supabase.auth.signOut();
 
@@ -81,12 +132,12 @@ function AdminPage() {
         return;
       }
 
-      // המשתמש הוא מנהל
       setIsAdmin(true);
 
-      await loadContent();
+      await loadAllData();
     } catch (err) {
       console.error(err);
+
       setIsAdmin(false);
       setError("אירעה שגיאה בבדיקת ההרשאה.");
     } finally {
@@ -96,12 +147,26 @@ function AdminPage() {
   }
 
   // =========================
-  // טעינת התוכן
+  // טעינת כל הנתונים
   // =========================
-  async function loadContent() {
+
+  async function loadAllData() {
     setError("");
     setMessage("");
 
+    await Promise.all([
+      loadContent(),
+      loadMessages(),
+      loadDonations(),
+      loadVolunteers(),
+    ]);
+  }
+
+  // =========================
+  // SITE CONTENT
+  // =========================
+
+  async function loadContent() {
     const { data, error } = await supabase
       .from("site_content")
       .select("section, content")
@@ -109,8 +174,7 @@ function AdminPage() {
 
     if (error) {
       console.error("Failed to load site content:", error);
-
-      setError(`שגיאה בטעינת התוכן: ${error.message}`);
+      setError(`שגיאה בטעינת תוכן האתר: ${error.message}`);
       return;
     }
 
@@ -125,9 +189,67 @@ function AdminPage() {
   }
 
   // =========================
+  // CONTACT MESSAGES
+  // =========================
+
+  async function loadMessages() {
+    const { data, error } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load messages:", error);
+      setError(`שגיאה בטעינת הפניות: ${error.message}`);
+      return;
+    }
+
+    setMessages((data ?? []) as ContactMessage[]);
+  }
+
+  // =========================
+  // DONATIONS
+  // =========================
+
+  async function loadDonations() {
+    const { data, error } = await supabase
+      .from("donations")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load donations:", error);
+      setError(`שגיאה בטעינת התרומות: ${error.message}`);
+      return;
+    }
+
+    setDonations((data ?? []) as Donation[]);
+  }
+
+  // =========================
+  // VOLUNTEERS
+  // =========================
+
+  async function loadVolunteers() {
+    const { data, error } = await supabase
+      .from("volunteer_applications")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load volunteers:", error);
+      setError(`שגיאה בטעינת פניות ההתנדבות: ${error.message}`);
+      return;
+    }
+
+    setVolunteers((data ?? []) as VolunteerApplication[]);
+  }
+
+  // =========================
   // התחברות
   // =========================
-  async function login(event: React.FormEvent<HTMLFormElement>) {
+
+  async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError("");
@@ -148,7 +270,6 @@ function AdminPage() {
       return;
     }
 
-    // גם אחרי התחברות בודקים שהמשתמש מנהל
     const { data: admin, error: adminError } = await supabase
       .from("admin_users")
       .select("user_id")
@@ -169,7 +290,7 @@ function AdminPage() {
     setEmail("");
     setPassword("");
 
-    await loadContent();
+    await loadAllData();
 
     setLoading(false);
   }
@@ -177,23 +298,31 @@ function AdminPage() {
   // =========================
   // יציאה
   // =========================
+
   async function logout() {
     await supabase.auth.signOut();
 
     setIsAdmin(false);
     setSections([]);
+    setMessages([]);
+    setDonations([]);
+    setVolunteers([]);
+
     setSelectedSection("");
     setEditorValue("");
+
     setMessage("");
     setError("");
   }
 
   // =========================
-  // בחירת Section
+  // בחירת SECTION
   // =========================
+
   function selectSection(section: SiteContentRow) {
     setSelectedSection(section.section);
     setEditorValue(JSON.stringify(section.content, null, 2));
+
     setMessage("");
     setError("");
   }
@@ -201,6 +330,7 @@ function AdminPage() {
   // =========================
   // שמירת תוכן
   // =========================
+
   async function saveContent() {
     if (!selectedSection) return;
 
@@ -259,8 +389,40 @@ function AdminPage() {
   }
 
   // =========================
+  // טעינת טבלה מחדש
+  // =========================
+
+  async function refreshCurrentSection() {
+    setMessage("");
+    setError("");
+
+    setLoading(true);
+
+    if (activeSection === "content") {
+      await loadContent();
+    }
+
+    if (activeSection === "messages") {
+      await loadMessages();
+    }
+
+    if (activeSection === "donations") {
+      await loadDonations();
+    }
+
+    if (activeSection === "volunteers") {
+      await loadVolunteers();
+    }
+
+    setLoading(false);
+
+    setMessage("✅ הנתונים עודכנו.");
+  }
+
+  // =========================
   // בדיקת הרשאה
   // =========================
+
   if (checkingAuth) {
     return (
       <main
@@ -279,6 +441,7 @@ function AdminPage() {
   // =========================
   // מסך התחברות
   // =========================
+
   if (!isAdmin) {
     return (
       <main
@@ -377,8 +540,9 @@ function AdminPage() {
   }
 
   // =========================
-  // טעינה
+  // LOADING
   // =========================
+
   if (loading) {
     return (
       <main
@@ -393,14 +557,16 @@ function AdminPage() {
   }
 
   // =========================
-  // דשבורד
+  // DASHBOARD
   // =========================
+
   return (
     <main
       dir="rtl"
       className="min-h-screen bg-muted/30 px-4 py-8 sm:px-6 lg:px-8"
     >
       <div className="mx-auto max-w-7xl">
+
         {/* HEADER */}
         <header className="mb-8 rounded-[2rem] bg-gradient-to-l from-primary to-leaf p-8 text-primary-foreground shadow-soft">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -414,7 +580,7 @@ function AdminPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-relaxed opacity-90">
-                מכאן מנהל העמותה יכול לנהל את התוכן שמופיע באתר.
+                מכאן מנהל העמותה יכול לנהל את התוכן והנתונים שמופיעים באתר.
               </p>
             </div>
 
@@ -447,125 +613,508 @@ function AdminPage() {
           </div>
         )}
 
-        {/* EMPTY STATE */}
-        {sections.length === 0 ? (
-          <div className="rounded-[2rem] border border-border bg-card p-10 text-center shadow-card">
-            <h2 className="text-xl font-black text-foreground">
-              לא נמצא תוכן
-            </h2>
+        {/* NAVIGATION */}
+        <div className="mb-6 rounded-[2rem] border border-border bg-card p-3 shadow-card">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
 
-            <p className="mt-2 text-sm text-muted-foreground">
-              טבלת site_content ריקה או שאין הרשאה לקרוא ממנה.
-            </p>
+            <button
+              type="button"
+              onClick={() => setActiveSection("content")}
+              className={[
+                "rounded-2xl px-4 py-4 text-sm font-bold transition",
+                activeSection === "content"
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-foreground hover:bg-primary/10",
+              ].join(" ")}
+            >
+              🏠 תוכן האתר
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSection("messages")}
+              className={[
+                "rounded-2xl px-4 py-4 text-sm font-bold transition",
+                activeSection === "messages"
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-foreground hover:bg-primary/10",
+              ].join(" ")}
+            >
+              💬 פניות
+              <span className="mr-2 opacity-80">
+                ({messages.length})
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSection("donations")}
+              className={[
+                "rounded-2xl px-4 py-4 text-sm font-bold transition",
+                activeSection === "donations"
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-foreground hover:bg-primary/10",
+              ].join(" ")}
+            >
+              ❤️ תרומות
+              <span className="mr-2 opacity-80">
+                ({donations.length})
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSection("volunteers")}
+              className={[
+                "rounded-2xl px-4 py-4 text-sm font-bold transition",
+                activeSection === "volunteers"
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-foreground hover:bg-primary/10",
+              ].join(" ")}
+            >
+              🤝 מתנדבים
+              <span className="mr-2 opacity-80">
+                ({volunteers.length})
+              </span>
+            </button>
+
           </div>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-            {/* SIDEBAR */}
-            <aside className="h-fit rounded-[2rem] border border-border bg-card p-4 shadow-card lg:sticky lg:top-6">
-              <h2 className="px-3 py-3 font-display text-lg font-black">
-                תוכן האתר
-              </h2>
+        </div>
 
-              <div className="space-y-2">
-                {sections.map((section) => {
-                  const active =
-                    section.section === selectedSection;
+        {/* REFRESH */}
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={refreshCurrentSection}
+            className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-bold text-foreground shadow-card transition hover:bg-primary/10"
+          >
+            🔄 רענון נתונים
+          </button>
+        </div>
 
-                  return (
-                    <button
-                      key={section.section}
-                      type="button"
-                      onClick={() => selectSection(section)}
-                      className={[
-                        "w-full rounded-2xl px-4 py-3 text-right text-sm font-bold transition-colors",
-                        active
-                          ? "bg-primary text-primary-foreground shadow-soft"
-                          : "text-foreground hover:bg-primary/10",
-                      ].join(" ")}
-                    >
-                      {getSectionName(section.section)}
-                    </button>
-                  );
-                })}
+        {/* =========================
+            CONTENT
+        ========================= */}
+
+        {activeSection === "content" && (
+          <>
+            {sections.length === 0 ? (
+              <div className="rounded-[2rem] border border-border bg-card p-10 text-center shadow-card">
+                <h2 className="text-xl font-black text-foreground">
+                  לא נמצא תוכן
+                </h2>
+
+                <p className="mt-2 text-sm text-muted-foreground">
+                  טבלת site_content ריקה או שאין הרשאה לקרוא ממנה.
+                </p>
               </div>
-            </aside>
+            ) : (
+              <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
 
-            {/* EDITOR */}
-            <section className="rounded-[2rem] border border-border bg-card p-5 shadow-card sm:p-7">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-primary">
-                    עריכת תוכן
-                  </p>
-
-                  <h2 className="mt-1 font-display text-2xl font-black text-foreground">
-                    {getSectionName(selectedSection)}
+                {/* SIDEBAR */}
+                <aside className="h-fit rounded-[2rem] border border-border bg-card p-4 shadow-card lg:sticky lg:top-6">
+                  <h2 className="px-3 py-3 font-display text-lg font-black">
+                    תוכן האתר
                   </h2>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    section: {selectedSection}
-                  </p>
-                </div>
+                  <div className="space-y-2">
+                    {sections.map((section) => {
+                      const active =
+                        section.section === selectedSection;
 
-                <button
-                  type="button"
-                  onClick={saveContent}
-                  disabled={saving}
-                  className="btn-pill bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-soft transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {saving
-                    ? "שומר..."
-                    : "💾 שמירת שינויים"}
-                </button>
+                      return (
+                        <button
+                          key={section.section}
+                          type="button"
+                          onClick={() => selectSection(section)}
+                          className={[
+                            "w-full rounded-2xl px-4 py-3 text-right text-sm font-bold transition-colors",
+                            active
+                              ? "bg-primary text-primary-foreground shadow-soft"
+                              : "text-foreground hover:bg-primary/10",
+                          ].join(" ")}
+                        >
+                          {getSectionName(section.section)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </aside>
+
+                {/* EDITOR */}
+                <section className="rounded-[2rem] border border-border bg-card p-5 shadow-card sm:p-7">
+
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                        עריכת תוכן
+                      </p>
+
+                      <h2 className="mt-1 font-display text-2xl font-black text-foreground">
+                        {getSectionName(selectedSection)}
+                      </h2>
+
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        section: {selectedSection}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={saveContent}
+                      disabled={saving}
+                      className="btn-pill bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-soft transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {saving
+                        ? "שומר..."
+                        : "💾 שמירת שינויים"}
+                    </button>
+                  </div>
+
+                  {message && (
+                    <div className="mt-5 rounded-2xl bg-muted px-4 py-3 text-sm font-bold text-foreground">
+                      {message}
+                    </div>
+                  )}
+
+                  <div className="mt-6">
+                    <label
+                      htmlFor="content-editor"
+                      className="mb-2 block text-sm font-bold text-foreground"
+                    >
+                      תוכן הסקשן
+                    </label>
+
+                    <textarea
+                      id="content-editor"
+                      value={editorValue}
+                      onChange={(event) =>
+                        setEditorValue(event.target.value)
+                      }
+                      spellCheck={false}
+                      dir="ltr"
+                      className="min-h-[500px] w-full rounded-2xl border border-border bg-background p-5 font-mono text-sm leading-7 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-yellow-50 p-4 text-sm leading-relaxed text-yellow-900">
+                    <strong>שימי לב:</strong>{" "}
+                    כרגע העורך מציג את התוכן בפורמט JSON.
+                    אל תמחקי את המרכאות, הסוגריים או הפסיקים.
+                    לאחר שינוי התוכן לחצי על{" "}
+                    <strong>"שמירת שינויים"</strong>.
+                  </div>
+
+                </section>
               </div>
-
-              {/* MESSAGE */}
-              {message && (
-                <div className="mt-5 rounded-2xl bg-muted px-4 py-3 text-sm font-bold text-foreground">
-                  {message}
-                </div>
-              )}
-
-              {/* JSON EDITOR */}
-              <div className="mt-6">
-                <label
-                  htmlFor="content-editor"
-                  className="mb-2 block text-sm font-bold text-foreground"
-                >
-                  תוכן הסקשן
-                </label>
-
-                <textarea
-                  id="content-editor"
-                  value={editorValue}
-                  onChange={(event) =>
-                    setEditorValue(event.target.value)
-                  }
-                  spellCheck={false}
-                  dir="ltr"
-                  className="min-h-[500px] w-full rounded-2xl border border-border bg-background p-5 font-mono text-sm leading-7 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              {/* INFO */}
-              <div className="mt-4 rounded-2xl bg-yellow-50 p-4 text-sm leading-relaxed text-yellow-900">
-                <strong>שימי לב:</strong>{" "}
-                כרגע העורך מציג את התוכן בפורמט JSON.
-                אל תמחקי את המרכאות, הסוגריים או הפסיקים.
-                לאחר שינוי התוכן לחצי על
-                <strong> "שמירת שינויים"</strong>.
-              </div>
-            </section>
-          </div>
+            )}
+          </>
         )}
+
+        {/* =========================
+            CONTACT MESSAGES
+        ========================= */}
+
+        {activeSection === "messages" && (
+          <AdminCard
+            title="💬 פניות יצירת קשר"
+            subtitle="כל הפניות שנשלחו דרך טופס יצירת הקשר באתר."
+          >
+            {messages.length === 0 ? (
+              <EmptyTable message="אין כרגע פניות להצגה." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-right">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-4 text-sm font-black">
+                        שם
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        טלפון
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        אימייל
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        נושא
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        הודעה
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        תאריך
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {messages.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border last:border-0 hover:bg-muted/40"
+                      >
+                        <td className="px-4 py-4 font-bold">
+                          {item.name}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.phone || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.email || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.topic || "-"}
+                        </td>
+
+                        <td className="max-w-[350px] px-4 py-4 leading-relaxed">
+                          {item.message}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-4 text-sm text-muted-foreground">
+                          {formatDate(item.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminCard>
+        )}
+
+        {/* =========================
+            DONATIONS
+        ========================= */}
+
+        {activeSection === "donations" && (
+          <AdminCard
+            title="❤️ תרומות"
+            subtitle="כל התרומות שנרשמו במערכת."
+          >
+            {donations.length === 0 ? (
+              <EmptyTable message="אין כרגע תרומות להצגה." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-right">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-4 text-sm font-black">
+                        שם
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        אימייל
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        טלפון
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        סכום
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        סוג תרומה
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        הקדשה
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        תאריך
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {donations.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border last:border-0 hover:bg-muted/40"
+                      >
+                        <td className="px-4 py-4 font-bold">
+                          {item.name}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.email || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.phone || "-"}
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-primary">
+                          ₪{Number(item.amount).toLocaleString("he-IL")}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                            {item.monthly
+                              ? "חודשית"
+                              : "חד פעמית"}
+                          </span>
+                        </td>
+
+                        <td className="max-w-[250px] px-4 py-4">
+                          {item.dedication || "-"}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-4 text-sm text-muted-foreground">
+                          {formatDate(item.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminCard>
+        )}
+
+        {/* =========================
+            VOLUNTEERS
+        ========================= */}
+
+        {activeSection === "volunteers" && (
+          <AdminCard
+            title="🤝 פניות התנדבות"
+            subtitle="כל הבקשות והפניות של אנשים המעוניינים להתנדב."
+          >
+            {volunteers.length === 0 ? (
+              <EmptyTable message="אין כרגע פניות התנדבות להצגה." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-right">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-4 text-sm font-black">
+                        שם
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        אימייל
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        טלפון
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        תפקיד
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        הודעה
+                      </th>
+                      <th className="px-4 py-4 text-sm font-black">
+                        תאריך
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {volunteers.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border last:border-0 hover:bg-muted/40"
+                      >
+                        <td className="px-4 py-4 font-bold">
+                          {item.name}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.email || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.phone || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {item.role || "-"}
+                        </td>
+
+                        <td className="max-w-[350px] px-4 py-4 leading-relaxed">
+                          {item.message || "-"}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-4 text-sm text-muted-foreground">
+                          {formatDate(item.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminCard>
+        )}
+
       </div>
     </main>
   );
 }
 
 // =========================
+// CARD COMPONENT
+// =========================
+
+function AdminCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[2rem] border border-border bg-card p-5 shadow-card sm:p-7">
+      <div className="mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">
+          ניהול מערכת
+        </p>
+
+        <h2 className="mt-1 font-display text-2xl font-black text-foreground">
+          {title}
+        </h2>
+
+        <p className="mt-2 text-sm text-muted-foreground">
+          {subtitle}
+        </p>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+
+// =========================
+// EMPTY TABLE
+// =========================
+
+function EmptyTable({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl bg-muted/50 p-10 text-center">
+      <p className="text-sm font-bold text-muted-foreground">
+        {message}
+      </p>
+    </div>
+  );
+}
+
+// =========================
+// DATE FORMAT
+// =========================
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleString("he-IL", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+// =========================
 // שמות הסקשנים
 // =========================
+
 function getSectionName(section: string) {
   const names: Record<string, string> = {
     hero: "🏠 אזור ראשי",
