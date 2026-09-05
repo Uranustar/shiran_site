@@ -40,3 +40,6 @@ GRANT INSERT ON public.donations TO anon, authenticated;
 GRANT ALL ON public.donations TO service_role;
 ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can pledge a donation" ON public.donations FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+
+
