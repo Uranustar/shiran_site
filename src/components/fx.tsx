@@ -65,13 +65,11 @@ export function useScrollReveal(key: unknown, autoTagRoot?: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Pointer-follow spotlight for any `.spotlight` / `.shadow-card` element. */
+/* Pointer-follow spotlight for any `.spotlight` element. */
 export function useGlobalSpotlight() {
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
-      const target = (e.target as HTMLElement | null)?.closest?.<HTMLElement>(
-        ".spotlight, .fx-main .shadow-card",
-      );
+      const target = (e.target as HTMLElement | null)?.closest?.<HTMLElement>(".spotlight");
       if (!target) return;
       const r = target.getBoundingClientRect();
       target.style.setProperty("--mx", `${e.clientX - r.left}px`);
@@ -80,6 +78,47 @@ export function useGlobalSpotlight() {
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
   }, []);
+}
+
+/* ------------------------------------------------------------------ */
+/* Calls `cb(progress 0..1)` as the element scrolls through the viewport.
+ * `mode="through"`: 0 when its top hits the viewport bottom, 1 when its bottom
+ * leaves the top. `mode="pin"`: 0 when its top hits the viewport top, 1 when
+ * its bottom hits the viewport bottom (for sticky/pinned sections). */
+export function useScrollProgress<T extends HTMLElement>(
+  cb: (p: number) => void,
+  mode: "through" | "pin" = "through",
+) {
+  const ref = useRef<T>(null);
+  const cbRef = useRef(cb);
+  cbRef.current = cb;
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const p =
+        mode === "pin"
+          ? -r.top / Math.max(1, r.height - vh)
+          : (vh - r.top) / Math.max(1, r.height + vh);
+      cbRef.current(Math.min(1, Math.max(0, p)));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [mode]);
+  return ref;
 }
 
 /* ------------------------------------------------------------------ */
@@ -102,10 +141,10 @@ export function ScrollProgress() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-1">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px]">
       <div
         ref={ref}
-        className="h-full origin-right bg-gradient-to-l from-primary via-blossom to-sun"
+        className="h-full origin-right bg-primary"
         style={{ transform: "scaleX(0)" }}
       />
     </div>
@@ -113,82 +152,66 @@ export function ScrollProgress() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Soft glow that trails the cursor (desktop / fine pointers only). */
-export function CursorGlow() {
+/* Editorial cursor: a small ring that trails the pointer, grows over links
+ * and shows a label over elements with [data-cursor="..."]. The native cursor
+ * stays visible. Fine pointers only. */
+export function CustomCursor() {
   const ref = useRef<HTMLDivElement>(null);
+  const [label, setLabel] = useState("");
+  const [hover, setHover] = useState(false);
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches || prefersReducedMotion()) return;
-    let x = window.innerWidth / 2,
-      y = window.innerHeight / 2,
+    let x = -100,
+      y = -100,
       cx = x,
       cy = y,
       raf = 0;
     const onMove = (e: PointerEvent) => {
       x = e.clientX;
       y = e.clientY;
+      const t = e.target as HTMLElement | null;
+      const lab = t?.closest?.<HTMLElement>("[data-cursor]")?.dataset["cursor"] ?? "";
+      setLabel(lab);
+      setHover(!lab && !!t?.closest?.("a, button, [role=button], input, textarea, select"));
       if (ref.current) ref.current.style.opacity = "1";
     };
+    const onLeave = () => {
+      if (ref.current) ref.current.style.opacity = "0";
+    };
     const loop = () => {
-      cx += (x - cx) * 0.12;
-      cy += (y - cy) * 0.12;
-      if (ref.current) ref.current.style.transform = `translate3d(${cx - 200}px, ${cy - 200}px, 0)`;
+      cx += (x - cx) * 0.2;
+      cy += (y - cy) * 0.2;
+      if (ref.current) ref.current.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
       raf = requestAnimationFrame(loop);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
     raf = requestAnimationFrame(loop);
     return () => {
       window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", onLeave);
       cancelAnimationFrame(raf);
     };
   }, []);
+  const size = label ? 96 : hover ? 56 : 28;
   return (
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[1] h-[400px] w-[400px] rounded-full opacity-0 mix-blend-multiply transition-opacity duration-700"
-      style={{
-        background:
-          "radial-gradient(closest-side, color-mix(in oklab, var(--primary) 22%, transparent), transparent)",
-      }}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* 3D tilt on hover. */
-export function TiltCard({
-  children,
-  className = "",
-  max = 10,
-  style,
-}: {
-  children: ReactNode;
-  className?: string;
-  max?: number;
-  style?: CSSProperties;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse" || prefersReducedMotion()) return;
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transform = `perspective(900px) rotateX(${(-py * max).toFixed(2)}deg) rotateY(${(px * max).toFixed(2)}deg) translateY(-4px)`;
-  };
-  const reset = () => {
-    if (ref.current) ref.current.style.transform = "";
-  };
-  return (
-    <div
-      ref={ref}
-      onPointerMove={onMove}
-      onPointerLeave={reset}
-      className={`spotlight transition-transform duration-300 ease-out will-change-transform ${className}`}
-      style={{ transformStyle: "preserve-3d", ...style }}
+      className="pointer-events-none fixed left-0 top-0 z-[100] opacity-0 transition-opacity duration-300"
     >
-      {children}
+      <div
+        className={`-translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ease-out ${
+          label
+            ? "grid place-items-center bg-sun text-xs font-black text-ink"
+            : hover
+              ? "bg-primary/20 ring-1 ring-primary"
+              : "ring-1 ring-ink/50"
+        }`}
+        style={{ width: size, height: size }}
+      >
+        {label}
+      </div>
     </div>
   );
 }
@@ -218,6 +241,72 @@ export function Magnetic({ children, strength = 0.3 }: { children: ReactNode; st
     >
       {children}
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Headline whose words slide up from behind a mask, one after another. */
+export function SplitWords({
+  text,
+  className = "",
+  delay = 0,
+  step = 70,
+  emphasizeLast = false,
+}: {
+  text: string;
+  className?: string;
+  delay?: number;
+  step?: number;
+  emphasizeLast?: boolean;
+}) {
+  const words = text.trim().split(/\s+/);
+  return (
+    <span className={className} aria-label={text}>
+      {words.map((w, i) => (
+        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.12em] align-bottom">
+          <span
+            className={`animate-word-in inline-block ${
+              emphasizeLast && i === words.length - 1 ? "font-serif-italic text-primary" : ""
+            }`}
+            style={{ animationDelay: `${delay + i * step}ms` }}
+          >
+            {w}
+            {i < words.length - 1 ? "\u00a0" : ""}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Paragraph whose words "light up" one by one as you scroll through it. */
+export function ScrollLitText({ text, className = "" }: { text: string; className?: string }) {
+  const words = text.trim().split(/\s+/);
+  const spans = useRef<(HTMLSpanElement | null)[]>([]);
+  const ref = useScrollProgress<HTMLParagraphElement>((p) => {
+    // light up between 15% and 65% of the pass-through
+    const t = Math.min(1, Math.max(0, (p - 0.15) / 0.5));
+    const lit = t * words.length;
+    spans.current.forEach((s, i) => {
+      if (s) s.style.opacity = String(Math.min(1, Math.max(0.15, lit - i + 0.15)));
+    });
+  });
+  return (
+    <p ref={ref} className={className}>
+      {words.map((w, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            spans.current[i] = el;
+          }}
+          className="transition-opacity duration-200"
+          style={{ opacity: 0.15 }}
+        >
+          {w}{" "}
+        </span>
+      ))}
+    </p>
   );
 }
 
@@ -270,62 +359,43 @@ export function CountUp({ value, duration = 1800 }: { value: string; duration?: 
 }
 
 /* ------------------------------------------------------------------ */
-/* Cycles through words with a 3D flip-in. */
-export function RotatingWords({ words, interval = 2600 }: { words: string[]; interval?: number }) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (words.length < 2 || prefersReducedMotion()) return;
-    const id = setInterval(() => setI((v) => (v + 1) % words.length), interval);
-    return () => clearInterval(id);
-  }, [words.length, interval]);
-  return (
-    <span className="inline-block [perspective:600px]">
-      <span key={i} className="animate-word-in inline-block text-gradient">
-        {words[i]}
-      </span>
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-export function Marquee({ items, className = "" }: { items: string[]; className?: string }) {
+export function Marquee({
+  items,
+  className = "",
+  separator = "✺",
+}: {
+  items: string[];
+  className?: string;
+  separator?: string;
+}) {
   const row = [...items, ...items];
+  const track = (hidden: boolean) => (
+    <div aria-hidden={hidden || undefined} className="animate-marquee flex shrink-0 items-center">
+      {row.map((t, idx) => (
+        <span key={idx} className="flex items-center whitespace-nowrap">
+          <span className="px-6 sm:px-10">{t}</span>
+          <span aria-hidden className="text-sun">
+            {separator}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
   return (
-    <div
-      className={`relative flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_10%,#000_90%,transparent)] ${className}`}
-    >
-      <div className="animate-marquee flex shrink-0 items-center gap-10 pe-10 hover:[animation-play-state:paused]">
-        {row.map((t, idx) => (
-          <span key={idx} className="flex items-center gap-10 whitespace-nowrap">
-            <span>{t}</span>
-            <span aria-hidden className="text-primary">
-              ✦
-            </span>
-          </span>
-        ))}
-      </div>
-      <div
-        aria-hidden
-        className="animate-marquee flex shrink-0 items-center gap-10 pe-10 hover:[animation-play-state:paused]"
-      >
-        {row.map((t, idx) => (
-          <span key={idx} className="flex items-center gap-10 whitespace-nowrap">
-            <span>{t}</span>
-            <span className="text-primary">✦</span>
-          </span>
-        ))}
-      </div>
+    <div className={`flex overflow-hidden ${className}`}>
+      {track(false)}
+      {track(true)}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Guided box-breathing exercise. */
+/* Guided breathing exercise. */
 const PHASES = [
   { label: "שאיפה", hint: "נשמו פנימה לאט דרך האף", scale: 1, secs: 4 },
   { label: "החזקה", hint: "החזיקו את האוויר בעדינות", scale: 1, secs: 4 },
-  { label: "נשיפה", hint: "שחררו לאט דרך הפה", scale: 0.55, secs: 6 },
-  { label: "מנוחה", hint: "רגע של שקט", scale: 0.55, secs: 2 },
+  { label: "נשיפה", hint: "שחררו לאט דרך הפה", scale: 0.5, secs: 6 },
+  { label: "מנוחה", hint: "רגע של שקט", scale: 0.5, secs: 2 },
 ] as const;
 
 export function BreathingWidget() {
@@ -349,7 +419,7 @@ export function BreathingWidget() {
   }, [running]);
 
   const cur = PHASES[phase]!;
-  const scale = running ? cur.scale : 0.7;
+  const scale = running ? cur.scale : 0.62;
 
   const toggle = () => {
     if (running) {
@@ -365,54 +435,49 @@ export function BreathingWidget() {
       <button
         type="button"
         onClick={toggle}
+        data-cursor={running ? "עצירה" : "התחלה"}
         aria-label={running ? "עצירת תרגיל הנשימה" : "התחלת תרגיל נשימה"}
-        className="group relative grid h-72 w-72 place-items-center rounded-full outline-none focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-80 sm:w-80"
+        className="relative grid h-72 w-72 place-items-center rounded-full outline-none focus-visible:ring-4 focus-visible:ring-primary/40 sm:h-80 sm:w-80"
       >
-        {/* orbit ring */}
-        <span className="animate-spin-slow absolute inset-0 rounded-full border-2 border-dashed border-primary/30" />
-        {!running && (
-          <span className="animate-ping-soft absolute inset-10 rounded-full bg-primary/25" />
-        )}
-        {/* breathing orb */}
+        <span className="absolute inset-0 rounded-full border border-ink/25" />
+        <span className="animate-spin-slow absolute inset-3 rounded-full border border-dashed border-ink/25" />
         <span
-          className="absolute inset-6 rounded-full shadow-[0_0_80px_-10px_var(--primary)]"
+          className="absolute inset-8 rounded-full bg-sun"
           style={{
-            background:
-              "radial-gradient(circle at 30% 30%, color-mix(in oklab, white 70%, var(--sun)), var(--primary) 55%, color-mix(in oklab, var(--primary) 60%, var(--blossom)))",
             transform: `scale(${scale})`,
             transition: `transform ${running ? cur.secs : 0.6}s cubic-bezier(0.45, 0, 0.55, 1)`,
           }}
         />
-        <span className="relative z-10 flex flex-col items-center text-primary-foreground drop-shadow">
+        <span className="relative z-10 flex flex-col items-center text-ink">
           {running ? (
             <>
-              <span className="font-display text-3xl font-black">{cur.label}</span>
-              <span className="mt-1 font-display text-5xl font-black tabular-nums">{left}</span>
+              <span className="font-display text-2xl font-black">{cur.label}</span>
+              <span className="font-display text-6xl font-black tabular-nums">{left}</span>
             </>
           ) : (
             <>
-              <span className="font-display text-2xl font-black">לחצו להתחיל</span>
-              <span className="mt-1 text-sm font-semibold opacity-90">דקה אחת בשבילך</span>
+              <span className="font-serif-italic text-3xl">התחילו</span>
+              <span className="mt-1 text-sm font-semibold opacity-70">דקה אחת בשבילך</span>
             </>
           )}
         </span>
       </button>
       <p
-        className="mt-8 h-6 text-center text-base font-semibold text-muted-foreground"
+        className="mt-6 h-6 text-center text-base font-semibold text-muted-foreground"
         aria-live="polite"
       >
         {running
           ? cur.hint
           : cycles > 0
-            ? `כל הכבוד! השלמת ${cycles} סבבי נשימה 💛`
+            ? `כל הכבוד! השלמת ${cycles} סבבי נשימה`
             : "תרגיל נשימה מרגיע — 4·4·6"}
       </p>
       <div className="mt-4 flex gap-2">
         {PHASES.map((p, idx) => (
           <span
             key={p.label}
-            className={`h-2 rounded-full transition-all duration-500 ${
-              running && idx === phase ? "w-10 bg-primary" : "w-2 bg-primary/25"
+            className={`h-1 transition-all duration-500 ${
+              running && idx === phase ? "w-10 bg-ink" : "w-4 bg-ink/20"
             }`}
           />
         ))}

@@ -15,14 +15,15 @@ import {
   Phone,
 } from "../components/icons";
 import {
-  TiltCard,
   CountUp,
-  RotatingWords,
   Marquee,
   Magnetic,
   BreathingWidget,
-  prefersReducedMotion,
+  SplitWords,
+  ScrollLitText,
+  useScrollProgress,
 } from "../components/fx";
+import { ParticleHeart } from "../components/ParticleHeart";
 import { supabase } from "../integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -258,266 +259,225 @@ function HomePage() {
 
   return (
     <div className="overflow-x-clip">
-      <HomeHero
-        badge={hero?.badge ?? "עמותה לתמיכה במתמודדי נפש"}
-        title={hero?.title ?? "לא תהיו לבד בדרך אל האור"}
-        description={
-          hero?.description ??
-          "אנחנו כאן בשבילך — ליווי אישי, ייעוץ מקצועי וקהילה חמה, באהבה ובכבוד, ללא תיוג וללא שיפוט."
-        }
-        donateLabel={hero?.donateButton ?? "לתרומה"}
-        supportLabel={hero?.supportButton ?? "לקבלת סיוע — *3042"}
-      />
+      {/* ============================== HERO ============================== */}
+      <section data-noreveal className="relative">
+        <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-[1400px] gap-6 px-4 pb-8 pt-4 sm:px-8 lg:grid-cols-12 lg:gap-10">
+          <div className="flex flex-col justify-between gap-10 lg:col-span-7">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/15 pb-4 text-xs font-bold tracking-wide text-muted-foreground">
+              <span className="text-ink">(01)</span>
+              <span className="animate-word-in">{hero?.badge ?? "עמותה לתמיכה במתמודדי נפש"}</span>
+              <span className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> קו חם 24/7
+              </span>
+            </div>
 
-      {/* SUPPORT CARDS GRID */}
-      <section className="relative z-10 -mt-24 pb-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-            {supportCards.map((card, i) => (
-              <div
-                key={card.title}
-                data-reveal
-                style={{ ["--reveal-delay" as string]: `${i * 70}ms` }}
+            <h1 className="font-display text-[15vw] font-black leading-[0.9] tracking-[-0.045em] text-ink sm:text-[11vw] lg:text-[6.6vw] xl:text-[6.2rem]">
+              <SplitWords
+                text={hero?.title ?? "לא תהיו לבד בדרך אל האור"}
+                emphasizeLast
+                delay={100}
+                step={90}
+              />
+            </h1>
+
+            <div className="grid gap-8 sm:grid-cols-2 sm:items-end">
+              <p
+                className="animate-word-in max-w-md text-lg leading-relaxed text-ink/75"
+                style={{ animationDelay: "600ms" }}
               >
-                <SupportCard {...card} />
+                {hero?.description ??
+                  "אנחנו כאן בשבילך — ליווי אישי, ייעוץ מקצועי וקהילה חמה, באהבה ובכבוד, ללא תיוג וללא שיפוט."}
+              </p>
+              <div
+                className="animate-word-in flex flex-wrap gap-3 sm:justify-end"
+                style={{ animationDelay: "750ms" }}
+              >
+                <Magnetic>
+                  <Link
+                    to="/donate"
+                    className="btn-pill inline-flex items-center gap-2 bg-ink px-7 py-4 text-base text-paper hover:bg-primary"
+                  >
+                    {hero?.donateButton ?? "לתרומה"}
+                    <ArrowLeft className="h-4 w-4" />
+                  </Link>
+                </Magnetic>
+                <a
+                  href="tel:*3042"
+                  className="btn-pill inline-flex items-center gap-2 border border-ink px-7 py-4 text-base text-ink hover:bg-sun"
+                >
+                  <Phone className="h-4 w-4" />
+                  {hero?.supportButton ?? "לקבלת סיוע — *3042"}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* 3D */}
+          <div className="grain relative min-h-[440px] overflow-hidden rounded-lg bg-ink lg:col-span-5 lg:min-h-0">
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between p-5 text-xs font-bold text-paper/60">
+              <span>(אינטראקטיבי)</span>
+              <span className="text-left">
+                מכאוס
+                <br />
+                <span className="font-serif-italic text-base text-sun">לשקט</span>
+              </span>
+            </div>
+            <ParticleHeart className="absolute inset-0" />
+          </div>
+        </div>
+      </section>
+
+      {/* ============================ MARQUEE ============================ */}
+      <section
+        aria-hidden
+        data-noreveal
+        className="relative z-10 my-10 -rotate-2 bg-sun py-5 sm:my-16"
+      >
+        <Marquee
+          className="font-display text-3xl font-black tracking-tight text-ink sm:text-5xl"
+          items={["הקשבה", "תקווה", "קהילה", "ליווי אישי", "ללא שיפוט", "צמיחה", "חוסן", "כבוד"]}
+        />
+      </section>
+
+      {/* =========================== MANIFESTO =========================== */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="02" label="הדרך שלנו" />
+          <div className="mt-10 grid gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+              <ScrollLitText
+                className="font-display text-3xl font-bold leading-[1.25] tracking-tight text-ink sm:text-5xl"
+                text="מצמיחים מהלב נולדה מתוך האמונה שריפוי מתחיל בקשר. אנו מלווים מתמודדי נפש ובני משפחותיהם — כדי שאף אחד לא יישאר לבד מול האתגרים שבדרך."
+              />
+              <div className="mt-14 grid gap-px overflow-hidden rounded-lg border border-ink/15 bg-ink/15 sm:grid-cols-3">
+                {[
+                  "דיסקרטיות מלאה וכיבוד זכויות הפרט",
+                  "צוות מקצועי ומתנדבים מנוסים",
+                  "ליווי לאורך כל הדרך — ללא תיוג",
+                ].map((text, i) => (
+                  <div key={text} className="bg-paper p-6 transition-colors hover:bg-sun">
+                    <span className="font-serif-italic text-3xl text-primary">{i + 1}.</span>
+                    <p className="mt-6 text-base font-semibold text-ink">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="lg:col-span-4">
+              <ParallaxPhoto />
+              <Link
+                to="/about"
+                className="group mt-6 flex items-center justify-between border-b border-ink py-4 text-lg font-bold text-ink"
+              >
+                הכירו עוד עלינו
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-ink transition-all duration-300 group-hover:bg-ink group-hover:text-paper">
+                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== SUPPORT — HORIZONTAL ====================== */}
+      <HorizontalCards cards={supportCards} />
+
+      {/* ========================= SERVICES LIST ========================= */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="04" label="תחומי התמיכה שלנו" />
+          <h2 className="mt-8 max-w-4xl font-display text-5xl font-black leading-[0.95] tracking-tight text-ink sm:text-7xl">
+            מעגל <span className="font-serif-italic font-normal text-primary">שלם</span> של תמיכה.
+          </h2>
+          <HoverList
+            items={services.map((s) => ({ title: s.title, desc: s.desc, icon: s.icon }))}
+          />
+          <div className="mt-10">
+            <Link
+              to="/activities"
+              className="btn-pill inline-flex items-center gap-2 border border-ink px-7 py-3.5 text-sm text-ink hover:bg-ink hover:text-paper"
+            >
+              לכל תחומי התמיכה <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================= STATS ============================= */}
+      <section className="py-10">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="05" label="במספרים" />
+          <div className="mt-10 grid grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`border-ink/15 py-8 pe-4 ${i % 2 === 1 ? "border-r ps-4 sm:ps-8" : ""} ${
+                  i === 2 ? "lg:border-r lg:ps-8" : ""
+                } ${i < 2 ? "border-b lg:border-b-0" : ""}`}
+              >
+                <p className="font-display text-5xl font-black tracking-tighter text-ink sm:text-7xl xl:text-8xl">
+                  <CountUp value={stat.value} />
+                </p>
+                <p className="mt-3 text-sm font-semibold text-muted-foreground">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* MARQUEE */}
-      <section aria-hidden className="py-10">
-        <Marquee
-          className="font-display text-3xl font-black text-foreground/15 sm:text-5xl"
-          items={["הקשבה", "תקווה", "קהילה", "ליווי אישי", "ללא שיפוט", "צמיחה", "חוסן", "כבוד"]}
-        />
-      </section>
-
-      {/* INTRO / ABOUT PREVIEW */}
-      <section className="relative py-20">
-        <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div data-reveal className="order-2 lg:order-1">
-            <SectionEyebrow>הדרך שלנו</SectionEyebrow>
-            <h2 className="mt-4 font-display text-4xl font-black leading-[1.1] text-foreground sm:text-5xl">
-              כל אדם ראוי <span className="text-gradient-dark">לתמיכה, לקשב ולתקווה</span>
-            </h2>
-            <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-              מצמיחים מהלב נולדה מתוך האמונה שריפוי מתחיל בקשר. אנו מלווים מתמודדי נפש ובני
-              משפחותיהם בליווי אישי וקבוצתי, בייעוץ מקצועי ובקהילה מכילה — כדי שאף אחד לא יישאר לבד
-              מול האתגרים שבדרך.
-            </p>
-
-            <ul className="mt-8 space-y-3">
-              {[
-                "דיסקרטיות מלאה וכיבוד זכויות הפרט",
-                "צוות מקצועי ומתנדבים מנוסים",
-                "ליווי לאורך כל הדרך — ללא תיוג",
-              ].map((text) => (
-                <li
-                  key={text}
-                  className="group flex items-center gap-3 rounded-2xl border border-transparent p-2 text-foreground transition-all hover:border-border hover:bg-card hover:shadow-card"
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-blossom text-primary-foreground transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
-                    <Heart className="h-4 w-4" />
-                  </span>
-                  <span className="text-base font-semibold">{text}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Magnetic>
-              <Link
-                to="/about"
-                className="btn-pill group mt-9 inline-flex items-center gap-2 bg-foreground px-7 py-4 text-sm font-bold text-background shadow-soft"
+      {/* ============================ BREATHE ============================ */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="06" label="רגע לעצמך" />
+          <div className="mt-10 grid items-center gap-14 lg:grid-cols-12">
+            <div className="lg:col-span-6">
+              <h2 className="font-display text-6xl font-black leading-[0.92] tracking-tight text-ink sm:text-8xl">
+                עצרו.
+                <br />
+                <span className="font-serif-italic font-normal text-primary">נשמו.</span>
+                <br />
+                אנחנו כאן.
+              </h2>
+              <p className="mt-8 max-w-md text-lg leading-relaxed text-ink/70">
+                כשהכל מרגיש כבד מדי, נשימה איטית ומודעת יכולה להרגיע את מערכת העצבים תוך דקה. לחצו
+                על העיגול ועקבו אחריו.
+              </p>
+              <a
+                href="tel:*3042"
+                className="group mt-8 inline-flex items-center gap-4 border-b border-ink pb-2 text-ink"
               >
-                הכירו עוד עלינו
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              </Link>
-            </Magnetic>
-          </div>
-
-          <div data-reveal className="order-1 lg:order-2">
-            <ParallaxImage />
-          </div>
-        </div>
-      </section>
-
-      {/* SERVICES — BENTO */}
-      <section className="relative py-24">
-        <div className="bg-dots pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,#000_30%,transparent_75%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div data-reveal className="mx-auto max-w-2xl text-center">
-            <SectionEyebrow>תחומי התמיכה שלנו</SectionEyebrow>
-            <h2 className="mt-4 font-display text-4xl font-black text-foreground sm:text-5xl">
-              מעגל <span className="text-gradient-dark">שלם</span> של תמיכה
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              מליווי אישי ועד קהילה — בנינו רשת בטוחה שמחזיקה אתכם בכל רגע.
-            </p>
-          </div>
-
-          <div className="mt-14 grid auto-rows-[minmax(190px,auto)] gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((service, i) => {
-              const Icon = service.icon;
-              const featured = i === 0;
-              return (
-                <div
-                  key={service.title}
-                  data-reveal
-                  style={{ ["--reveal-delay" as string]: `${i * 90}ms` }}
-                  className={
-                    featured ? "sm:col-span-2 lg:row-span-2" : i === 3 ? "sm:col-span-2" : ""
-                  }
+                <span className="text-sm text-muted-foreground">צריכים לדבר עכשיו?</span>
+                <span
+                  dir="ltr"
+                  className="font-display text-2xl font-black group-hover:text-primary"
                 >
-                  <TiltCard
-                    max={featured ? 5 : 9}
-                    className={`group relative flex h-full flex-col overflow-hidden rounded-[2rem] p-7 ${
-                      featured
-                        ? "bg-gradient-to-br from-primary via-primary to-blossom text-primary-foreground shadow-soft"
-                        : "border border-border bg-card/80 shadow-card backdrop-blur"
-                    }`}
-                  >
-                    {featured && (
-                      <>
-                        <div className="animate-aurora absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-sun/50 blur-3xl" />
-                        <Heart className="animate-float absolute bottom-6 left-6 h-32 w-32 opacity-15" />
-                      </>
-                    )}
-                    <span
-                      className={`relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500 group-hover:rotate-[-8deg] group-hover:scale-110 ${
-                        featured
-                          ? "bg-white/20 backdrop-blur"
-                          : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-                      }`}
-                    >
-                      <Icon className="h-7 w-7" />
-                    </span>
-                    <div className="relative mt-auto pt-8">
-                      <h3
-                        className={`font-display font-black ${featured ? "text-3xl sm:text-4xl" : "text-xl text-foreground"}`}
-                      >
-                        {service.title}
-                      </h3>
-                      <p
-                        className={`mt-2 ${featured ? "text-lg opacity-90" : "text-sm text-muted-foreground"}`}
-                      >
-                        {service.desc}
-                      </p>
-                    </div>
-                    <span className="absolute left-6 top-7 opacity-0 transition-all duration-300 group-hover:-translate-x-1 group-hover:opacity-100">
-                      <ArrowLeft className="h-5 w-5" />
-                    </span>
-                  </TiltCard>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link
-              to="/activities"
-              className="btn-pill group inline-flex items-center gap-2 border-2 border-foreground/80 px-7 py-3.5 text-sm font-bold text-foreground transition-colors hover:bg-foreground hover:text-background"
-            >
-              לכל תחומי התמיכה
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div
-            data-reveal
-            className="relative overflow-hidden rounded-[2.5rem] bg-foreground p-10 text-background shadow-soft sm:p-14"
-          >
-            <div className="animate-aurora absolute -right-20 -top-32 h-80 w-80 rounded-full bg-primary/50 blur-[90px]" />
-            <div className="animate-aurora absolute -bottom-32 left-10 h-80 w-80 rounded-full bg-blossom/40 blur-[90px] [animation-delay:-7s]" />
-            <div className="relative grid grid-cols-2 gap-y-10 lg:grid-cols-4">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`px-4 text-center ${i % 2 === 1 ? "border-r border-white/10" : ""} ${i === 2 ? "lg:border-r lg:border-white/10" : ""}`}
-                >
-                  <p className="font-display text-3xl font-black sm:text-5xl lg:text-6xl">
-                    <span className="text-gradient">
-                      <CountUp value={stat.value} />
-                    </span>
-                  </p>
-                  <p className="mt-3 text-sm font-medium opacity-75">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* BREATHING EXERCISE */}
-      <section className="relative py-24">
-        <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div data-reveal>
-            <SectionEyebrow>רגע לעצמך</SectionEyebrow>
-            <h2 className="mt-4 font-display text-4xl font-black leading-[1.1] text-foreground sm:text-5xl">
-              עצרו. <span className="text-gradient-dark">נשמו.</span> אנחנו כאן.
-            </h2>
-            <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-              כשהכל מרגיש כבד מדי, נשימה איטית ומודעת יכולה להרגיע את מערכת העצבים תוך דקה. לחצו על
-              העיגול ועקבו אחריו — שאיפה, החזקה ונשיפה ארוכה.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card/70 p-4 text-sm backdrop-blur">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Phone className="h-5 w-5" />
-              </span>
-              <span className="flex-1 text-muted-foreground">
-                צריכים לדבר עם מישהו עכשיו? הקו שלנו זמין 24/7.
-              </span>
-              <a href="tel:*3042" className="font-bold text-primary hover:underline" dir="ltr">
-                *3042
+                  *3042
+                </span>
               </a>
             </div>
-          </div>
-          <div data-reveal className="flex justify-center">
-            <BreathingWidget />
+            <div className="flex justify-center lg:col-span-6">
+              <BreathingWidget />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* INFO / KNOW */}
-      <section className="py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div
-            data-reveal
-            className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end"
-          >
-            <div>
-              <SectionEyebrow>כדאי לדעת ולהכיר</SectionEyebrow>
-              <h2 className="mt-4 font-display text-4xl font-black text-foreground sm:text-5xl">
-                מידע שעושה סדר
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* ============================= INFO ============================== */}
+      <section className="py-16">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="07" label="כדאי לדעת ולהכיר" />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-lg border border-ink/15 bg-ink/15 sm:grid-cols-2 lg:grid-cols-4">
             {INFO.map((card, i) => (
               <Link
                 key={card.title}
                 to="/activities"
-                data-reveal
-                style={{ ["--reveal-delay" as string]: `${i * 80}ms` }}
-                className="spotlight group flex min-h-64 flex-col rounded-[2rem] border border-border bg-card p-7 shadow-card transition-all duration-500 hover:-translate-y-2"
+                className="spotlight group flex min-h-72 flex-col bg-paper p-7 transition-colors duration-300"
               >
-                <span className="font-display text-5xl font-black text-foreground/10 transition-colors duration-500 group-hover:text-primary/40">
-                  0{i + 1}
-                </span>
-                <h3 className="mt-auto font-display text-xl font-black text-foreground">
-                  {card.title}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">{card.desc}</p>
-                <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-primary transition-all group-hover:gap-3">
+                <span className="text-xs font-bold text-muted-foreground">0{i + 1}</span>
+                <h3 className="mt-auto font-display text-2xl font-black text-ink">{card.title}</h3>
+                <p className="mt-2 text-sm text-ink/65">{card.desc}</p>
+                <span className="mt-6 flex items-center justify-between border-t border-ink/15 pt-4 text-sm font-bold text-ink">
                   {card.cta}
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-2" />
                 </span>
               </Link>
             ))}
@@ -525,259 +485,238 @@ function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIAL */}
-      <section className="py-24">
-        <div data-reveal className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="pointer-events-none absolute inset-x-10 top-1/2 h-40 -translate-y-1/2 rounded-full bg-gradient-to-l from-primary/20 via-blossom/25 to-sun/25 blur-3xl" />
-          <Quote className="relative mx-auto h-14 w-14 text-primary/40" />
-          <blockquote className="relative mt-8 font-display text-3xl font-bold leading-snug text-foreground sm:text-4xl">
-            "
-            {testimonial?.quote ??
-              "כשהגעתי למצמיחים מהלב הרגשתי שלראשונה מישהו באמת שומע אותי. הליווי החזיר לי את התקווה ואת הקול שלי."}
-            "
-          </blockquote>
-          <div className="relative mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-card/80 px-5 py-2.5 shadow-card backdrop-blur">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blossom text-primary-foreground">
-              <Heart className="h-4 w-4" />
+      {/* ========================== TESTIMONIAL ========================== */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          <SectionHead n="08" label="קולות" />
+          <figure className="relative mt-12 text-center">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -top-16 right-1/2 translate-x-1/2 font-serif-italic text-[14rem] leading-none text-sun sm:-top-24 sm:text-[20rem]"
+            >
+              ”
             </span>
-            <span className="text-sm font-semibold text-muted-foreground">
+            <blockquote className="relative mx-auto max-w-5xl font-serif-italic text-3xl leading-snug text-ink sm:text-5xl">
+              {testimonial?.quote ??
+                "כשהגעתי למצמיחים מהלב הרגשתי שלראשונה מישהו באמת שומע אותי. הליווי החזיר לי את התקווה ואת הקול שלי."}
+            </blockquote>
+            <figcaption className="mt-10 inline-flex items-center gap-3 text-sm font-bold text-ink">
+              <span className="h-px w-10 bg-ink" />
               {testimonial?.author ?? "נ׳ — בוגרת מסלול ליווי אישי"}
-            </span>
-          </div>
+              <span className="h-px w-10 bg-ink" />
+            </figcaption>
+          </figure>
         </div>
       </section>
     </div>
   );
 }
 
-function SectionEyebrow({ children }: { children: ReactNode }) {
+/* ------------------------------------------------------------------ */
+
+function SectionHead({ n, label }: { n: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-bold text-primary">
-      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-      {children}
-    </span>
+    <div>
+      <div className="flex items-baseline justify-between gap-4 text-xs font-bold tracking-wide">
+        <span className="text-ink">({n})</span>
+        <span className="text-muted-foreground">{label}</span>
+      </div>
+      <div data-reveal="rule" className="rule mt-3 opacity-20" />
+    </div>
   );
 }
 
-function HomeHero({
-  badge,
-  title,
-  description,
-  donateLabel,
-  supportLabel,
-}: {
-  badge: string;
-  title: string;
-  description: string;
-  donateLabel: string;
-  supportLabel: string;
-}) {
-  const ref = useRef<HTMLElement>(null);
+function ParallaxPhoto() {
+  const img = useRef<HTMLImageElement>(null);
+  const ref = useScrollProgress<HTMLDivElement>((p) => {
+    if (img.current) img.current.style.transform = `translateY(${(p - 0.5) * -60}px) scale(1.15)`;
+  });
+  return (
+    <div ref={ref} data-reveal className="relative aspect-[4/5] overflow-hidden rounded-lg">
+      <img
+        ref={img}
+        src={meadowImg}
+        alt="שביל בשדה ירוק פורח — דרך של תקווה"
+        width={1280}
+        height={960}
+        loading="lazy"
+        className="h-full w-full scale-[1.15] object-cover"
+      />
+      <span className="absolute bottom-4 right-4 rounded-full bg-paper px-3 py-1.5 text-xs font-bold text-ink">
+        דרך של תקווה
+      </span>
+    </div>
+  );
+}
+
+const CARD_SKINS = [
+  "bg-paper text-ink",
+  "bg-sun text-ink",
+  "bg-primary text-paper",
+  "bg-blossom text-ink",
+  "border border-paper/30 text-paper",
+  "bg-sage text-ink",
+];
+
+function HorizontalCards({ cards }: { cards: SupportCardData[] }) {
+  const track = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el || prefersReducedMotion() || !window.matchMedia("(pointer: fine)").matches) return;
-    let raf = 0;
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        el.style.setProperty("--px", x.toFixed(3));
-        el.style.setProperty("--py", y.toFixed(3));
-      });
-    };
-    el.addEventListener("pointermove", onMove);
-    return () => {
-      el.removeEventListener("pointermove", onMove);
-      cancelAnimationFrame(raf);
-    };
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const on = () => setIsDesktop(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
   }, []);
 
-  const layer = (depth: number) => ({
-    transform: `translate3d(calc(var(--px, 0) * ${depth}px), calc(var(--py, 0) * ${depth}px), 0)`,
-    transition: "transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)",
-  });
+  const pin = useScrollProgress<HTMLDivElement>((p) => {
+    const el = track.current;
+    if (!el) return;
+    if (!isDesktop) {
+      el.style.transform = "";
+      return;
+    }
+    const dist = el.scrollWidth - el.clientWidth;
+    el.style.transform = `translateX(${p * dist}px)`;
+  }, "pin");
 
   return (
-    <section ref={ref} data-noreveal className="relative px-3 sm:px-5">
-      <div className="relative isolate mx-auto min-h-[min(92vh,880px)] max-w-[1600px] overflow-hidden rounded-[2.5rem] bg-foreground sm:rounded-[3rem]">
-        <img
-          src={heroImg}
-          alt=""
-          width={1920}
-          height={1080}
-          className="absolute inset-[-4%] h-[108%] w-[108%] max-w-none object-cover opacity-70"
-          style={layer(-30)}
-          fetchPriority="high"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/40 to-foreground/10" />
-
-        {/* aurora orbs */}
-        <div className="pointer-events-none absolute inset-0" style={layer(60)}>
-          <div className="animate-aurora absolute -right-32 top-10 h-[30rem] w-[30rem] rounded-full bg-primary/60 mix-blend-screen blur-[90px]" />
-          <div className="animate-aurora absolute -left-24 bottom-0 h-[26rem] w-[26rem] rounded-full bg-blossom/50 mix-blend-screen blur-[90px] [animation-delay:-6s]" />
-          <div className="animate-aurora absolute left-1/3 top-1/4 h-64 w-64 rounded-full bg-sun/40 mix-blend-screen blur-[80px] [animation-delay:-12s]" />
-        </div>
-
-        {/* floating glass chips */}
-        <div className="pointer-events-none absolute inset-0 hidden lg:block" style={layer(-45)}>
-          <div className="animate-float glass absolute right-[8%] top-[22%] flex items-center gap-3 rounded-2xl px-4 py-3 !bg-white/15 text-white shadow-soft">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-              <Phone className="h-5 w-5" />
-            </span>
-            <span className="leading-tight">
-              <span className="block font-display text-lg font-black">24/7</span>
-              <span className="text-xs opacity-80">קו חם ודיסקרטי</span>
-            </span>
+    <section data-noreveal className="bg-ink text-paper">
+      <div
+        ref={pin}
+        className="relative"
+        style={{ height: isDesktop ? `${100 + cards.length * 32}vh` : undefined }}
+      >
+        <div className="flex flex-col justify-center overflow-hidden py-20 lg:sticky lg:top-0 lg:h-screen lg:py-0">
+          <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8">
+            <div className="flex items-baseline justify-between text-xs font-bold">
+              <span>(03)</span>
+              <span className="text-paper/60">איך אנחנו עוזרים</span>
+            </div>
+            <div className="rule mt-3 bg-paper opacity-20" />
+            <h2 className="mt-8 font-display text-5xl font-black leading-[0.95] tracking-tight sm:text-7xl">
+              יד מושטת,
+              <span className="font-serif-italic font-normal text-sun"> בכל צורה.</span>
+            </h2>
           </div>
-          <div className="animate-float glass absolute bottom-[26%] left-[7%] flex items-center gap-3 rounded-2xl px-4 py-3 !bg-white/15 text-white shadow-soft [animation-delay:-3s]">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-              <Users className="h-5 w-5" />
-            </span>
-            <span className="leading-tight">
-              <span className="block font-display text-lg font-black">+450</span>
-              <span className="text-xs opacity-80">מתנדבים ומלווים</span>
-            </span>
-          </div>
-        </div>
-
-        <div className="relative mx-auto flex min-h-[min(92vh,880px)] max-w-5xl flex-col items-center justify-center px-5 pb-36 pt-20 text-center text-white">
-          <span className="animate-word-in inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping-soft absolute inset-0 rounded-full bg-sun" />
-              <span className="relative h-2 w-2 rounded-full bg-sun" />
-            </span>
-            {badge}
-          </span>
-
-          <h1
-            className="animate-word-in mt-7 font-display text-5xl font-black leading-[1.02] tracking-tight drop-shadow-lg sm:text-7xl lg:text-8xl"
-            style={{ animationDelay: "120ms" }}
-          >
-            {title}
-          </h1>
-
-          <p
-            className="animate-word-in mt-6 font-display text-2xl font-bold sm:text-3xl"
-            style={{ animationDelay: "240ms" }}
-          >
-            כאן בשבילך עם{" "}
-            <RotatingWords words={["הקשבה", "ליווי אישי", "תקווה", "קהילה חמה", "אהבה"]} />
-          </p>
-
-          <p
-            className="animate-word-in mt-5 max-w-2xl text-lg text-white/80"
-            style={{ animationDelay: "360ms" }}
-          >
-            {description}
-          </p>
-
           <div
-            className="animate-word-in mt-10 flex flex-col items-center gap-3 sm:flex-row"
-            style={{ animationDelay: "480ms" }}
+            ref={track}
+            className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 will-change-transform sm:px-8 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" }}
           >
-            <Magnetic strength={0.35}>
-              <Link
-                to="/donate"
-                className="btn-pill group inline-flex items-center gap-2 bg-gradient-to-l from-sun to-blossom px-9 py-4 text-base font-black text-foreground shadow-[0_18px_50px_-12px_var(--sun)]"
-              >
-                <Heart className="h-5 w-5 transition-transform duration-300 group-hover:scale-125" />
-                {donateLabel}
-              </Link>
-            </Magnetic>
-            <Magnetic strength={0.25}>
-              <a
-                href="tel:*3042"
-                className="btn-pill inline-flex items-center gap-2 border border-white/30 bg-white/10 px-9 py-4 text-base font-bold text-white backdrop-blur-md hover:bg-white/20"
-              >
-                <Phone className="h-5 w-5" />
-                {supportLabel}
-              </a>
-            </Magnetic>
+            {cards.map((c, i) => {
+              const Icon = c.icon;
+              return (
+                <article
+                  key={c.title}
+                  className={`flex h-[24rem] w-[78vw] shrink-0 snap-start flex-col rounded-lg p-7 sm:w-[22rem] lg:h-[28rem] lg:w-[26rem] ${CARD_SKINS[i % CARD_SKINS.length]}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="font-serif-italic text-5xl leading-none opacity-80">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <Icon className="h-9 w-9" />
+                  </div>
+                  <h3 className="mt-auto font-display text-3xl font-black leading-tight tracking-tight lg:text-4xl">
+                    {c.title}
+                  </h3>
+                  <p className="mt-3 text-base opacity-75">{c.desc}</p>
+                </article>
+              );
+            })}
+            <Link
+              to="/activities"
+              data-cursor="לכולם"
+              className="group flex h-[24rem] w-[60vw] shrink-0 snap-start flex-col items-center justify-center gap-4 rounded-lg border border-paper/25 text-center sm:w-[18rem] lg:h-[28rem]"
+            >
+              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sun text-ink transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-45">
+                <ArrowLeft className="h-8 w-8" />
+              </span>
+              <span className="font-display text-2xl font-black">לכל תחומי התמיכה</span>
+            </Link>
           </div>
-
-          <a
-            href="#support"
-            aria-label="גללו למטה"
-            className="absolute bottom-32 hidden h-12 w-7 justify-center rounded-full border-2 border-white/40 pt-2 sm:flex"
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollBy({ top: window.innerHeight * 0.75, behavior: "smooth" });
-            }}
-          >
-            <span className="animate-scroll-cue h-2 w-1.5 rounded-full bg-white" />
-          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function ParallaxImage() {
-  const ref = useRef<HTMLDivElement>(null);
+function HoverList({ items }: { items: { title: string; desc: string; icon: typeof Heart }[] }) {
+  const preview = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState<number | null>(null);
+  const imgs = [heroImg, meadowImg];
+
   useEffect(() => {
-    if (prefersReducedMotion()) return;
-    let raf = 0;
-    const update = () => {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    let x = 0,
+      y = 0,
+      cx = 0,
+      cy = 0,
       raf = 0;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const p = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;
-      el.style.setProperty("--py", p.toFixed(3));
+    const onMove = (e: PointerEvent) => {
+      x = e.clientX;
+      y = e.clientY;
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+    const loop = () => {
+      cx += (x - cx) * 0.15;
+      cy += (y - cy) * 0.15;
+      if (preview.current) preview.current.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+      raf = requestAnimationFrame(loop);
     };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    raf = requestAnimationFrame(loop);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (
-    <div ref={ref} className="relative">
-      <div className="absolute -inset-4 -z-10 rotate-3 rounded-[2.5rem] bg-gradient-to-br from-primary/40 via-blossom/30 to-sun/40 blur-sm" />
-      <TiltCard max={6} className="relative overflow-hidden rounded-[2.5rem] shadow-card">
-        <img
-          src={meadowImg}
-          alt="שביל בשדה ירוק פורח — דרך של תקווה"
-          width={1280}
-          height={960}
-          loading="lazy"
-          className="h-full w-full scale-110 object-cover"
-          style={{ transform: "translateY(calc(var(--py, 0) * -40px)) scale(1.12)" }}
-        />
-        <div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-3 rounded-2xl glass p-4">
-          <p className="font-display text-lg font-black text-foreground">דרך של תקווה</p>
-          <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-            יחד לאורך כל הדרך
-          </span>
-        </div>
-      </TiltCard>
-    </div>
-  );
-}
-
-function SupportCard({ icon: Icon, title, desc, tone }: SupportCardData) {
-  const toneClasses: Record<Tone, string> = {
-    primary: "from-primary/20 to-primary/5 text-primary",
-    leaf: "from-leaf/30 to-leaf/5 text-leaf-foreground",
-    sun: "from-sun/40 to-sun/10 text-sun-foreground",
-  };
-
-  return (
-    <TiltCard className="group h-full rounded-[1.75rem] border border-white/60 bg-card/85 p-5 text-center shadow-card backdrop-blur-xl sm:p-6">
-      <span
-        className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-8deg] group-hover:scale-110 ${toneClasses[tone] ?? toneClasses.primary}`}
+    <div className="relative mt-14" onPointerLeave={() => setActive(null)}>
+      {/* floating image preview (desktop) */}
+      <div
+        ref={preview}
+        aria-hidden
+        className="pointer-events-none fixed left-0 top-0 z-30 hidden lg:block"
       >
-        <Icon className="h-7 w-7" />
-      </span>
-      <h3 className="mt-4 font-display text-base font-extrabold text-foreground sm:text-lg">
-        {title}
-      </h3>
-      <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{desc}</p>
-    </TiltCard>
+        <div
+          className={`-translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg transition-all duration-500 ${
+            active === null ? "h-0 w-0 opacity-0" : "h-56 w-44 opacity-100"
+          } ${active !== null && active % 2 ? "rotate-3" : "-rotate-3"}`}
+        >
+          {active !== null && (
+            <img src={imgs[active % 2]} alt="" className="h-56 w-44 max-w-none object-cover" />
+          )}
+        </div>
+      </div>
+
+      {items.map((it, i) => {
+        const Icon = it.icon;
+        return (
+          <Link
+            key={it.title}
+            to="/activities"
+            onPointerEnter={() => setActive(i)}
+            className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-4 overflow-hidden border-t border-ink/15 py-7 last:border-b sm:gap-8 sm:py-9"
+          >
+            <span className="absolute inset-0 origin-bottom scale-y-0 bg-sun transition-transform duration-500 ease-[cubic-bezier(0.7,0,0.2,1)] group-hover:scale-y-100" />
+            <span className="relative w-10 text-sm font-bold text-muted-foreground group-hover:text-ink">
+              0{i + 1}
+            </span>
+            <span className="relative">
+              <span className="block font-display text-3xl font-black tracking-tight text-ink transition-transform duration-500 group-hover:-translate-x-3 sm:text-5xl">
+                {it.title}
+              </span>
+              <span className="mt-1 block text-sm text-ink/60 sm:text-base">{it.desc}</span>
+            </span>
+            <span className="relative flex h-12 w-12 items-center justify-center rounded-full border border-ink/30 text-ink transition-all duration-500 group-hover:rotate-[-45deg] group-hover:border-ink group-hover:bg-ink group-hover:text-sun">
+              <Icon className="h-5 w-5 group-hover:hidden" />
+              <ArrowLeft className="hidden h-5 w-5 group-hover:block" />
+            </span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }

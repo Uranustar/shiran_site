@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageHero } from "../components/PageHero";
 import { useState } from "react";
 import { Phone, Mail, MapPin, Heart, MessageCircle, LifeBuoy } from "../components/icons";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,16 +62,12 @@ function ContactPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/15 to-background py-20">
-        <div className="blob-teal absolute -left-16 -top-10 h-72 w-72 opacity-50" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">צור קשר</span>
-          <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">אנחנו כאן בשבילך</h1>
-          <p className="mt-5 text-lg text-muted-foreground">
-            פנייה דיסקרטית, מכבדת וללא התחייבות. בחרו את הערוץ הנוח לכם.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        n="05"
+        eyebrow="צור קשר"
+        title="אנחנו כאן בשבילך"
+        lead="פנייה דיסקרטית, מכבדת וללא התחייבות. בחרו את הערוץ הנוח לכם."
+      />
 
       {/* channels */}
       <section className="py-16">

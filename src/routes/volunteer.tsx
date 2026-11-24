@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageHero } from "../components/PageHero";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, Users, LifeBuoy, Brain, HandHeart, Sparkles, ArrowLeft } from "../components/icons";
@@ -64,16 +65,12 @@ function VolunteerPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-b from-leaf/15 to-background py-20">
-        <div className="blob-leaf absolute -right-16 -top-10 h-72 w-72 opacity-50" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">התנדבות</span>
-          <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">שעות של משמעות</h1>
-          <p className="mt-5 text-lg text-muted-foreground">
-            הצטרפו למעגל התמיכה של מצמיחים מהלב. כל שעת התנדבות היא עוד אדם שלא נשאר לבד.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        n="04"
+        eyebrow="התנדבות"
+        title="שעות של משמעות"
+        lead="הצטרפו למעגל התמיכה של מצמיחים מהלב. כל שעת התנדבות היא עוד אדם שלא נשאר לבד."
+      />
 
       {/* roles */}
       <section className="py-20">

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageHero } from "../components/PageHero";
 import { Brain, LifeBuoy, Users, HandHeart, Sparkles, Heart, ArrowLeft, Sun, Leaf } from "../components/icons";
 
 export const Route = createFileRoute("/activities")({
@@ -74,16 +75,12 @@ const toneRing: Record<string, string> = {
 function ActivitiesPage() {
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-b from-leaf/15 to-background py-20">
-        <div className="blob-leaf absolute -left-16 -top-10 h-72 w-72 opacity-50" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">תחומי תמיכה</span>
-          <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">מעגל שלם של תמיכה</h1>
-          <p className="mt-5 text-lg text-muted-foreground">
-            מליווי אישי ועד קהילה — בנינו רשת בטוחה שמחזיקה אתכם בכל רגע ובכל שלב בדרך.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        n="03"
+        eyebrow="תחומי תמיכה"
+        title="מעגל שלם של תמיכה"
+        lead="מליווי אישי ועד קהילה — בנינו רשת בטוחה שמחזיקה אתכם בכל רגע ובכל שלב בדרך."
+      />
 
       <section className="py-20">
         <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">

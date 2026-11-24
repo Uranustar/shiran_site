@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageHero } from "../components/PageHero";
 import { Heart, Brain, Users, LifeBuoy, Sparkles, ArrowLeft, HandHeart } from "../components/icons";
 
 export const Route = createFileRoute("/about")({
@@ -38,20 +39,12 @@ function AboutPage() {
   return (
     <div>
       {/* Page hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/15 to-background py-20">
-        <div className="blob-teal absolute -right-16 -top-10 h-72 w-72 opacity-50" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">
-            אודותינו
-          </span>
-          <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">
-            קמנו כדי שאף אחד לא יישאר לבד
-          </h1>
-          <p className="mt-5 text-lg text-muted-foreground">
-            מצמיחים מהלב היא עמותה התנדבותית שהוקמה מתוך ידיעה עמוקה: ריפוי מתחיל בקשר.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        n="02"
+        eyebrow="אודותינו"
+        title="קמנו כדי שאף אחד לא יישאר לבד"
+        lead="מצמיחים מהלב היא עמותה התנדבותית שהוקמה מתוך ידיעה עמוקה: ריפוי מתחיל בקשר."
+      />
 
       {/* Story */}
       <section className="py-20">

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageHero } from "../components/PageHero";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, Sparkles, Users, LifeBuoy } from "../components/icons";
@@ -91,16 +92,12 @@ function DonatePage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-b from-sun/15 to-background py-20">
-        <div className="blob-sun absolute -left-16 -top-10 h-72 w-72 opacity-50" />
-        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">תרומות</span>
-          <h1 className="mt-3 font-display text-4xl font-black text-foreground sm:text-5xl">אתם האור בדרך</h1>
-          <p className="mt-5 text-lg text-muted-foreground">
-            התרומה שלך הופכת לשעת ליווי, לשיחת חירום ולקהילה מחזיקה. כל סכום עושה הבדל.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        n="06"
+        eyebrow="תרומות"
+        title="אתם האור בדרך"
+        lead="התרומה שלך הופכת לשעת ליווי, לשיחת חירום ולקהילה מחזיקה. כל סכום עושה הבדל."
+      />
 
       <section className="py-20">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:px-8">
