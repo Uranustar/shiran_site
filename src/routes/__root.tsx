@@ -18,6 +18,7 @@ import {
 } from "../components/fx";
 
 import appCss from "../styles.css?url";
+import { calmMusic, useCalmMusic } from "../lib/calmMusic";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Phone, MessageCircle, Heart, Mail, MapPin, ArrowLeft } from "../components/icons";
 
@@ -139,6 +140,7 @@ function RootComponent() {
 
   useScrollReveal(pathname, isAdmin ? undefined : "main.ed-main");
   useGlobalSpotlight();
+  useEffect(() => calmMusic.init(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -150,6 +152,7 @@ function RootComponent() {
       </main>
       <SiteFooter />
       {!isAdmin && <FloatingActions />}
+      {!isAdmin && <MusicInvite />}
     </QueryClientProvider>
   );
 }
@@ -256,10 +259,11 @@ function SiteChrome() {
               </span>
               <span dir="ltr">*3042</span>
             </a>
+            <MusicButton light={light} />
             <Magnetic>
               <Link
                 to="/donate"
-                className="btn-pill inline-flex items-center gap-2 bg-sun px-5 py-2.5 text-sm font-black text-ink hover:bg-ink hover:text-sun"
+                className="btn-pill inline-flex items-center gap-2 bg-sun px-4 py-2.5 text-sm font-black text-ink hover:bg-ink hover:text-sun sm:px-5"
               >
                 לתרומה
                 <ArrowLeft className="h-4 w-4" />
@@ -270,11 +274,11 @@ function SiteChrome() {
               aria-label={open ? "סגירת תפריט" : "פתיחת תפריט"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className={`inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors lg:hidden ${
+              className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold transition-colors sm:px-4 lg:hidden ${
                 light ? "border-paper/30 text-paper" : "border-ink/20 text-ink"
               }`}
             >
-              {open ? "סגירה" : "תפריט"}
+              <span className="hidden sm:inline">{open ? "סגירה" : "תפריט"}</span>
               <span className="relative block h-2.5 w-4">
                 <span
                   className={`absolute inset-x-0 top-0 h-[1.5px] bg-current transition-all duration-300 ${open ? "top-1/2 rotate-45" : ""}`}
@@ -329,6 +333,100 @@ function SiteChrome() {
         </div>
       </div>
     </>
+  );
+}
+
+/** Animated equalizer bars (static when paused). */
+function Bars({ on }: { on: boolean }) {
+  return (
+    <span className="flex h-3.5 items-end gap-[2px]" aria-hidden>
+      {[0.55, 1, 0.75, 0.4].map((h, i) => (
+        <span
+          key={i}
+          className={`w-[2px] rounded-full bg-current ${on ? "animate-eq" : ""}`}
+          style={{
+            height: on ? `${h * 100}%` : "3px",
+            animationDelay: `${i * 130}ms`,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function MusicButton({ light }: { light: boolean }) {
+  const m = useCalmMusic();
+  if (!m.ready) return null;
+  const waiting = m.pref === "on" && !m.playing; // resumes on first click
+  return (
+    <button
+      type="button"
+      onClick={() => calmMusic.toggle()}
+      aria-pressed={m.playing}
+      aria-label={m.playing ? "השתקת המוזיקה המרגיעה" : "הפעלת מוזיקה מרגיעה"}
+      title={m.playing ? "השתקת המוזיקה" : "מוזיקה מרגיעה"}
+      className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold transition-colors ${
+        light
+          ? "border-paper/30 text-paper hover:bg-paper/10"
+          : "border-ink/20 text-ink hover:bg-ink/5"
+      } ${m.playing ? "!border-primary" : ""}`}
+    >
+      <Bars on={m.playing || waiting} />
+      <span className="hidden xl:inline">{m.playing ? "מוזיקה" : "מוזיקה מרגיעה"}</span>
+    </button>
+  );
+}
+
+/** A gentle, one-time invitation to turn on background music. */
+function MusicInvite() {
+  const m = useCalmMusic();
+  const [shown, setShown] = useState(false);
+  const eligible = m.ready && m.pref === null && !m.promptDismissed;
+  useEffect(() => {
+    if (!eligible) return;
+    const t = setTimeout(() => setShown(true), 2500);
+    return () => clearTimeout(t);
+  }, [eligible]);
+  const visible = eligible && shown;
+  return (
+    <div
+      role="dialog"
+      aria-label="מוזיקה מרגיעה"
+      aria-hidden={!visible}
+      className={`fixed bottom-5 right-4 z-[55] w-[min(22rem,calc(100%-6.5rem))] rounded-xl border border-ink/15 bg-paper p-4 text-ink shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] sm:right-6 ${
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sun text-ink">
+          <Bars on />
+        </span>
+        <div className="min-w-0">
+          <p className="font-display text-base font-black">מוזיקה מרגיעה ברקע?</p>
+          <p className="mt-0.5 text-sm text-ink/70">
+            צלילי מדיטציה שקטים בזמן שאתם באתר. אפשר לכבות בכל רגע.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              tabIndex={visible ? 0 : -1}
+              onClick={() => calmMusic.setPref("on")}
+              className="rounded-full bg-ink px-4 py-1.5 text-sm font-black text-paper hover:bg-primary"
+            >
+              הפעלה
+            </button>
+            <button
+              type="button"
+              tabIndex={visible ? 0 : -1}
+              onClick={() => calmMusic.dismissPrompt()}
+              className="rounded-full px-3 py-1.5 text-sm font-bold text-ink/60 hover:text-ink"
+            >
+              לא עכשיו
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

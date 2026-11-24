@@ -8,7 +8,7 @@ import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { BreathAudio, PHASE_KEYS } from "../lib/breathAudio";
+import { calmMusic, useCalmMusic, type BreathPhase } from "../lib/calmMusic";
 
 export function prefersReducedMotion() {
   return (
@@ -392,6 +392,8 @@ export function Marquee({
 
 /* ------------------------------------------------------------------ */
 /* Guided breathing exercise. */
+const PHASE_KEYS: BreathPhase[] = ["inhale", "hold", "exhale", "rest"];
+
 const PHASES = [
   { label: "שאיפה", hint: "נשמו פנימה לאט דרך האף", scale: 1, secs: 4 },
   { label: "החזקה", hint: "החזיקו את האוויר בעדינות", scale: 1, secs: 4 },
@@ -419,40 +421,33 @@ export function BreathingWidget() {
     return () => clearInterval(id);
   }, [running]);
 
-  // Ambient music that follows the breath (generated live, no files).
-  const audio = useRef<BreathAudio | null>(null);
-  const [musicOn, setMusicOn] = useState(true);
-  const getAudio = () => (audio.current ??= new BreathAudio());
+  // Music comes from the shared site-wide engine: starting the exercise
+  // switches it to "breath" mode, stopping returns it to ambient (or silence).
+  const music = useCalmMusic();
+  const musicOn = music.pref !== "off";
 
   useEffect(() => {
-    if (running && musicOn && audio.current?.running) {
-      audio.current.setPhase(PHASE_KEYS[phase]!, PHASES[phase]!.secs);
-    }
-  }, [running, musicOn, phase]);
+    if (running) calmMusic.breathPhase(PHASE_KEYS[phase]!, PHASES[phase]!.secs);
+  }, [running, phase, music.playing]);
 
-  useEffect(() => () => audio.current?.stop(), []);
+  useEffect(() => () => calmMusic.breathEnd(), []);
 
   const cur = PHASES[phase]!;
   const scale = running ? cur.scale : 0.62;
 
-  // Audio must start inside a user gesture, so start/stop it from the handlers.
+  // Audio must start inside a user gesture, so it's driven from the handlers.
   const toggle = () => {
     if (running) {
       setRunning(false);
-      audio.current?.stop();
+      calmMusic.breathEnd();
     } else {
       setState((s) => ({ ...s, phase: 0, left: PHASES[0].secs }));
       setRunning(true);
-      if (musicOn) getAudio().start();
+      calmMusic.breathStart();
     }
   };
 
-  const toggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    if (!next) audio.current?.stop();
-    else if (running) getAudio().start();
-  };
+  const toggleMusic = () => calmMusic.setPref(musicOn ? "off" : "on");
 
   return (
     <div className="flex flex-col items-center">
@@ -510,6 +505,7 @@ export function BreathingWidget() {
         type="button"
         onClick={toggleMusic}
         aria-pressed={musicOn}
+        data-music-toggle
         className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
           musicOn ? "border-ink bg-ink text-paper" : "border-ink/25 text-ink/70 hover:border-ink"
         }`}
@@ -532,8 +528,8 @@ export function BreathingWidget() {
             <path d="m22 9-6 6M16 9l6 6" />
           )}
         </svg>
-        {musicOn ? "מוזיקה מרגיעה · פועלת" : "מוזיקה מרגיעה · כבויה"}
-        {musicOn && running && (
+        {music.playing ? "מוזיקה מרגיעה · מתנגנת" : musicOn ? "עם מוזיקה מרגיעה" : "מוזיקה כבויה"}
+        {music.playing && (
           <span className="flex h-3 items-end gap-0.5" aria-hidden>
             {[0, 1, 2].map((b) => (
               <span
