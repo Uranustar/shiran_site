@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import heroImg from "../assets/hero.jpg";
-import meadowImg from "../assets/meadow.jpg";
+import handsImg from "../assets/hands.jpg";
 import {
   Heart,
   Brain,
@@ -570,15 +570,15 @@ function ParallaxPhoto() {
     <div ref={ref} data-reveal className="relative aspect-[4/5] overflow-hidden rounded-lg">
       <img
         ref={img}
-        src={meadowImg}
-        alt="שביל בשדה ירוק פורח — דרך של תקווה"
-        width={1280}
-        height={960}
+        src={handsImg}
+        alt="שתי ידיים מושטות זו אל זו על רקע השמיים"
+        width={1400}
+        height={1750}
         loading="lazy"
         className="h-full w-full scale-[1.15] object-cover"
       />
       <span className="absolute bottom-4 right-4 rounded-full bg-paper px-3 py-1.5 text-xs font-bold text-ink">
-        דרך של תקווה
+        יד מושטת
       </span>
     </div>
   );
@@ -680,7 +680,7 @@ function HorizontalCards({ cards }: { cards: SupportCardData[] }) {
 function HoverList({ items }: { items: { title: string; desc: string; icon: typeof Heart }[] }) {
   const preview = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const imgs = [heroImg, meadowImg];
+  const imgs = [heroImg, handsImg];
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;

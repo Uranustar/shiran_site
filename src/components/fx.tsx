@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { BreathAudio, PHASE_KEYS } from "../lib/breathAudio";
 
 export function prefersReducedMotion() {
   return (
@@ -418,16 +419,39 @@ export function BreathingWidget() {
     return () => clearInterval(id);
   }, [running]);
 
+  // Ambient music that follows the breath (generated live, no files).
+  const audio = useRef<BreathAudio | null>(null);
+  const [musicOn, setMusicOn] = useState(true);
+  const getAudio = () => (audio.current ??= new BreathAudio());
+
+  useEffect(() => {
+    if (running && musicOn && audio.current?.running) {
+      audio.current.setPhase(PHASE_KEYS[phase]!, PHASES[phase]!.secs);
+    }
+  }, [running, musicOn, phase]);
+
+  useEffect(() => () => audio.current?.stop(), []);
+
   const cur = PHASES[phase]!;
   const scale = running ? cur.scale : 0.62;
 
+  // Audio must start inside a user gesture, so start/stop it from the handlers.
   const toggle = () => {
     if (running) {
       setRunning(false);
+      audio.current?.stop();
     } else {
       setState((s) => ({ ...s, phase: 0, left: PHASES[0].secs }));
       setRunning(true);
+      if (musicOn) getAudio().start();
     }
+  };
+
+  const toggleMusic = () => {
+    const next = !musicOn;
+    setMusicOn(next);
+    if (!next) audio.current?.stop();
+    else if (running) getAudio().start();
   };
 
   return (
@@ -482,6 +506,45 @@ export function BreathingWidget() {
           />
         ))}
       </div>
+      <button
+        type="button"
+        onClick={toggleMusic}
+        aria-pressed={musicOn}
+        className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+          musicOn ? "border-ink bg-ink text-paper" : "border-ink/25 text-ink/70 hover:border-ink"
+        }`}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+          {musicOn ? (
+            <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
+          ) : (
+            <path d="m22 9-6 6M16 9l6 6" />
+          )}
+        </svg>
+        {musicOn ? "מוזיקה מרגיעה · פועלת" : "מוזיקה מרגיעה · כבויה"}
+        {musicOn && running && (
+          <span className="flex h-3 items-end gap-0.5" aria-hidden>
+            {[0, 1, 2].map((b) => (
+              <span
+                key={b}
+                className="w-0.5 animate-pulse bg-sun"
+                style={{ height: `${6 + b * 3}px`, animationDelay: `${b * 180}ms` }}
+              />
+            ))}
+          </span>
+        )}
+      </button>
     </div>
   );
 }
