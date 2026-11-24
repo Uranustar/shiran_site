@@ -179,9 +179,33 @@ function Wordmark({ invert = false }: { invert?: boolean }) {
   );
 }
 
+/** True while the fixed header overlaps a dark hero ([data-hero-dark]). */
+function useOverDarkHero() {
+  const [over, setOver] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const check = () => {
+      const el = document.querySelector("[data-hero-dark]");
+      setOver(!!el && el.getBoundingClientRect().bottom > 72);
+    };
+    check();
+    const raf = requestAnimationFrame(check);
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [pathname]);
+  return over;
+}
+
 function SiteChrome() {
   const [open, setOpen] = useState(false);
   const scrolled = useScrolled();
+  const overDark = useOverDarkHero();
+  const light = open || overDark;
   const { pathname } = useLocation();
 
   useEffect(() => setOpen(false), [pathname]);
@@ -196,12 +220,12 @@ function SiteChrome() {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          scrolled && !open ? "bg-paper/85 backdrop-blur-md" : "bg-transparent"
+          scrolled && !light ? "bg-paper/85 backdrop-blur-md" : "bg-transparent"
         }`}
       >
         <div className="mx-auto flex h-[4.5rem] max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-8">
           <Link to="/" className="relative z-[70]" aria-label="מצמיחים מהלב — דף הבית">
-            <Wordmark invert={open} />
+            <Wordmark invert={light} />
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">
@@ -209,7 +233,7 @@ function SiteChrome() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="link-line group flex items-baseline gap-1 py-1 text-[15px] font-semibold text-ink"
+                className={`link-line group flex items-baseline gap-1 py-1 text-[15px] font-semibold transition-colors duration-300 ${light ? "text-paper" : "text-ink"}`}
                 activeProps={{ "aria-current": "page" as const }}
                 activeOptions={{ exact: item.to === "/" }}
               >
@@ -224,7 +248,7 @@ function SiteChrome() {
           <div className="relative z-[70] flex items-center gap-2 sm:gap-3">
             <a
               href="tel:*3042"
-              className={`hidden items-center gap-2 text-sm font-bold sm:inline-flex ${open ? "text-paper" : "text-ink"}`}
+              className={`hidden items-center gap-2 text-sm font-bold sm:inline-flex ${light ? "text-paper" : "text-ink"}`}
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping-soft absolute inset-0 rounded-full bg-primary" />
@@ -247,7 +271,7 @@ function SiteChrome() {
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
               className={`inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors lg:hidden ${
-                open ? "border-paper/30 text-paper" : "border-ink/20 text-ink"
+                light ? "border-paper/30 text-paper" : "border-ink/20 text-ink"
               }`}
             >
               {open ? "סגירה" : "תפריט"}
@@ -310,13 +334,19 @@ function SiteChrome() {
 
 function FloatingActions() {
   const [open, setOpen] = useState(false);
+  // the dark hero has its own call buttons — keep the FAB out of the way there
+  const hidden = useOverDarkHero() && !open;
   const actions = [
     { href: "tel:*3042", label: "לייעוץ דיסקרטי", icon: Phone },
     { href: "https://wa.me/9720000000", label: "וואטסאפ", icon: MessageCircle, external: true },
     { href: "/contact", label: "דברו איתנו", icon: Mail },
   ];
   return (
-    <div className="fixed bottom-5 left-4 z-40 flex flex-col-reverse items-start gap-2 lg:left-6">
+    <div
+      className={`fixed bottom-5 left-4 z-40 flex flex-col-reverse items-start gap-2 transition-all duration-500 lg:left-6 ${
+        hidden ? "pointer-events-none translate-y-6 opacity-0" : ""
+      }`}
+    >
       <button
         type="button"
         aria-label={open ? "סגירת אפשרויות יצירת קשר" : "פתיחת אפשרויות יצירת קשר"}

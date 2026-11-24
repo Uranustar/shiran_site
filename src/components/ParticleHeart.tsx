@@ -4,7 +4,8 @@
 // three.js is loaded lazily on the client only (SSR-safe, own chunk).
 import { useEffect, useRef, useState } from "react";
 
-type Status = "idle" | "holding" | "calm";
+export type HeartStatus = "idle" | "holding" | "calm" | "locked";
+type Status = HeartStatus;
 
 const VERT = /* glsl */ `
   uniform float uTime;
@@ -66,6 +67,16 @@ const FRAG = /* glsl */ `
   }
 `;
 
+export function heartLabel(status: HeartStatus) {
+  return status === "locked"
+    ? "הלב נשאר איתך 💛 · לחיצה משחררת"
+    : status === "calm"
+      ? "הנה. רגוע יותר. 💛"
+      : status === "holding"
+        ? "נושמים יחד…"
+        : "לחצו והחזיקו";
+}
+
 /** Rejection-sample a volumetric 3D heart (implicit surface), biased to the shell. */
 function sampleHeart(n: number) {
   const out = new Float32Array(n * 3);
@@ -102,7 +113,20 @@ function sampleChaos(n: number) {
   return out;
 }
 
-export function ParticleHeart({ className = "" }: { className?: string }) {
+export function ParticleHeart({
+  className = "",
+  offsetY = 0,
+  showHint = true,
+  onStatus,
+}: {
+  className?: string;
+  /** shift the particle field vertically (world units, negative = down) */
+  offsetY?: number;
+  showHint?: boolean;
+  onStatus?: (s: HeartStatus) => void;
+}) {
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
   const hostRef = useRef<HTMLDivElement>(null);
   const holdRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -187,6 +211,7 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
         blending: THREE.AdditiveBlending,
       });
       const points = new THREE.Points(geo, mat);
+      points.position.y = offsetY;
       scene.add(points);
 
       const resize = () => {
@@ -194,7 +219,9 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
         const h = host.clientHeight || 1;
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
-        camera.position.z = w / h < 0.9 ? 10.5 : 8.5;
+        const narrow = w / h < 0.9;
+        camera.position.z = narrow ? 13.5 : 8.5;
+        points.position.y = narrow ? offsetY * 0.3 : offsetY;
         camera.updateProjectionMatrix();
       };
       resize();
@@ -218,12 +245,18 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
         ray.setFromCamera(ndc, camera);
         if (ray.ray.intersectPlane(plane, hit)) {
           uniforms.uMouse.value.x = hit.x;
-          uniforms.uMouse.value.y = hit.y;
+          uniforms.uMouse.value.y = hit.y - points.position.y;
         }
         mouseTarget = 1;
         tiltX = ndc.x;
         tiltY = ndc.y;
       };
+      // Once the heart has fully formed it "locks" and stays after release.
+      // A short click on a locked heart lets it go again.
+      let locked = false;
+      let calmFor = 0;
+      let downAt = 0;
+      let downWhileLocked = false;
       const onLeave = () => {
         mouseTarget = 0;
         tiltX = tiltY = 0;
@@ -232,8 +265,14 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
       const onDown = (e: PointerEvent) => {
         onMove(e);
         holdRef.current = true;
+        downAt = performance.now();
+        downWhileLocked = locked;
       };
       const onUp = () => {
+        if (holdRef.current && downWhileLocked && performance.now() - downAt < 350) {
+          locked = false;
+          calmFor = 0;
+        }
         holdRef.current = false;
       };
       host.addEventListener("pointermove", onMove);
@@ -264,21 +303,37 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
         uniforms.uTime.value += dt;
         const since = (performance.now() - t0) / 1000;
         const demo = since > 1.2 && since < 4.2;
-        const want = reduced || holdRef.current || demo ? 1 : 0;
+        const holding = holdRef.current;
+        if (holding && morph > 0.92) {
+          calmFor += dt;
+          if (calmFor > 0.5) locked = true;
+        } else if (!holding) {
+          calmFor = 0;
+        }
+        const want = reduced || holding || locked || demo ? 1 : 0;
         // gather slowly (like a breath), release a little faster
         morph += (want - morph) * (want > morph ? 1.6 : 2.4) * dt;
         uniforms.uMorph.value = morph;
         uniforms.uMouse.value.z += (mouseTarget - uniforms.uMouse.value.z) * 4 * dt;
 
-        points.rotation.y += (tiltX * 0.5 - points.rotation.y) * 2 * dt;
+        // a locked heart slowly sways to show off its depth
+        const sway = locked && !holding ? Math.sin(uniforms.uTime.value * 0.6) * 0.45 : 0;
+        points.rotation.y += (tiltX * 0.5 + sway - points.rotation.y) * 2 * dt;
         points.rotation.x += (-tiltY * 0.25 - points.rotation.x) * 2 * dt;
         if (morph < 0.5) points.rotation.z += dt * 0.03;
         else points.rotation.z += (0 - points.rotation.z) * 2 * dt;
 
-        const s: Status = holdRef.current ? (morph > 0.92 ? "calm" : "holding") : "idle";
+        const s: Status = holding
+          ? morph > 0.92
+            ? "calm"
+            : "holding"
+          : locked
+            ? "locked"
+            : "idle";
         if (s !== lastStatus) {
           lastStatus = s;
           setStatus(s);
+          onStatusRef.current?.(s);
         }
         renderer.render(scene, camera);
         if (!reduced) raf = requestAnimationFrame(loop);
@@ -305,14 +360,10 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
       disposed = true;
       cleanup();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const label =
-    status === "calm"
-      ? "הנה. רגוע יותר. 💛"
-      : status === "holding"
-        ? "נושמים יחד…"
-        : "לחצו והחזיקו";
+  const label = heartLabel(status);
 
   return (
     <div className={`${className || "relative"} select-none`}>
@@ -320,13 +371,15 @@ export function ParticleHeart({ className = "" }: { className?: string }) {
         ref={hostRef}
         className="absolute inset-0 cursor-grab active:cursor-grabbing"
         role="img"
-        aria-label="ענן חלקיקים אינטראקטיבי שמתאסף לצורת לב כשלוחצים ומחזיקים"
+        aria-label="ענן חלקיקים אינטראקטיבי שמתאסף לצורת לב כשלוחצים ומחזיקים, ונשאר לב אחרי ששחררו"
         onContextMenu={(e) => e.preventDefault()}
       />
       {failed && (
         <div className="absolute inset-0 grid place-items-center text-[10rem] text-blossom">♥</div>
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
+      <div
+        className={`pointer-events-none absolute inset-x-0 bottom-5 flex justify-center ${showHint ? "" : "hidden"}`}
+      >
         <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md">
           <span
             className={`h-2 w-2 rounded-full transition-colors ${status === "idle" ? "bg-sun animate-pulse" : "bg-primary"}`}

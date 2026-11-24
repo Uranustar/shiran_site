@@ -23,7 +23,7 @@ import {
   ScrollLitText,
   useScrollProgress,
 } from "../components/fx";
-import { ParticleHeart } from "../components/ParticleHeart";
+import { ParticleHeart, heartLabel, type HeartStatus } from "../components/ParticleHeart";
 import { supabase } from "../integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -260,72 +260,16 @@ function HomePage() {
   return (
     <div className="overflow-x-clip">
       {/* ============================== HERO ============================== */}
-      <section data-noreveal className="relative">
-        <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-[1400px] gap-6 px-4 pb-8 pt-4 sm:px-8 lg:grid-cols-12 lg:gap-10">
-          <div className="flex flex-col justify-between gap-10 lg:col-span-7">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/15 pb-4 text-xs font-bold tracking-wide text-muted-foreground">
-              <span className="text-ink">(01)</span>
-              <span className="animate-word-in">{hero?.badge ?? "עמותה לתמיכה במתמודדי נפש"}</span>
-              <span className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" /> קו חם 24/7
-              </span>
-            </div>
-
-            <h1 className="font-display text-[15vw] font-black leading-[0.9] tracking-[-0.045em] text-ink sm:text-[11vw] lg:text-[6.6vw] xl:text-[6.2rem]">
-              <SplitWords
-                text={hero?.title ?? "לא תהיו לבד בדרך אל האור"}
-                emphasizeLast
-                delay={100}
-                step={90}
-              />
-            </h1>
-
-            <div className="grid gap-8 sm:grid-cols-2 sm:items-end">
-              <p
-                className="animate-word-in max-w-md text-lg leading-relaxed text-ink/75"
-                style={{ animationDelay: "600ms" }}
-              >
-                {hero?.description ??
-                  "אנחנו כאן בשבילך — ליווי אישי, ייעוץ מקצועי וקהילה חמה, באהבה ובכבוד, ללא תיוג וללא שיפוט."}
-              </p>
-              <div
-                className="animate-word-in flex flex-wrap gap-3 sm:justify-end"
-                style={{ animationDelay: "750ms" }}
-              >
-                <Magnetic>
-                  <Link
-                    to="/donate"
-                    className="btn-pill inline-flex items-center gap-2 bg-ink px-7 py-4 text-base text-paper hover:bg-primary"
-                  >
-                    {hero?.donateButton ?? "לתרומה"}
-                    <ArrowLeft className="h-4 w-4" />
-                  </Link>
-                </Magnetic>
-                <a
-                  href="tel:*3042"
-                  className="btn-pill inline-flex items-center gap-2 border border-ink px-7 py-4 text-base text-ink hover:bg-sun"
-                >
-                  <Phone className="h-4 w-4" />
-                  {hero?.supportButton ?? "לקבלת סיוע — *3042"}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* 3D */}
-          <div className="grain relative min-h-[440px] overflow-hidden rounded-lg bg-ink lg:col-span-5 lg:min-h-0">
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between p-5 text-xs font-bold text-paper/60">
-              <span>(אינטראקטיבי)</span>
-              <span className="text-left">
-                מכאוס
-                <br />
-                <span className="font-serif-italic text-base text-sun">לשקט</span>
-              </span>
-            </div>
-            <ParticleHeart className="absolute inset-0" />
-          </div>
-        </div>
-      </section>
+      <HeroStage
+        badge={hero?.badge ?? "עמותה לתמיכה במתמודדי נפש"}
+        title={hero?.title ?? "לא תהיו לבד בדרך אל האור"}
+        description={
+          hero?.description ??
+          "אנחנו כאן בשבילך — ליווי אישי, ייעוץ מקצועי וקהילה חמה, באהבה ובכבוד, ללא תיוג וללא שיפוט."
+        }
+        donateLabel={hero?.donateButton ?? "לתרומה"}
+        supportLabel={hero?.supportButton ?? "לקבלת סיוע — *3042"}
+      />
 
       {/* ============================ MARQUEE ============================ */}
       <section
@@ -513,6 +457,97 @@ function HomePage() {
 }
 
 /* ------------------------------------------------------------------ */
+
+function HeroStage({
+  badge,
+  title,
+  description,
+  donateLabel,
+  supportLabel,
+}: {
+  badge: string;
+  title: string;
+  description: string;
+  donateLabel: string;
+  supportLabel: string;
+}) {
+  const [status, setStatus] = useState<HeartStatus>("idle");
+  return (
+    <section
+      data-noreveal
+      data-hero-dark
+      className="grain relative -mt-[4.5rem] h-[100svh] min-h-[640px] overflow-hidden bg-ink text-paper"
+    >
+      <ParticleHeart
+        className="absolute inset-0"
+        offsetY={-0.85}
+        showHint={false}
+        onStatus={setStatus}
+      />
+
+      {/* soft vignettes keep the text readable over the particles */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-ink via-ink/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-ink via-ink/60 to-transparent" />
+
+      <div className="pointer-events-none relative mx-auto flex h-full max-w-[1400px] flex-col px-4 pb-8 pt-[5.5rem] sm:px-8">
+        <div className="flex items-center justify-between gap-3 border-b border-paper/15 pb-4 text-xs font-bold tracking-wide text-paper/60">
+          <span className="text-paper">(01)</span>
+          <span className="animate-word-in">{badge}</span>
+          <span className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> קו חם 24/7
+          </span>
+        </div>
+
+        <h1 className="mt-8 text-center font-display text-[13vw] font-black leading-[0.92] tracking-[-0.045em] sm:mt-10 sm:text-[9vw] lg:text-[6.5vw] xl:text-[6.4rem]">
+          <SplitWords text={title} emphasizeLast delay={100} step={90} />
+        </h1>
+
+        {/* the heart lives here (canvas behind) — hint floats under it */}
+        <div className="flex flex-1 items-end justify-center pb-4">
+          <span
+            className="animate-word-in inline-flex items-center gap-2 rounded-full border border-paper/20 bg-paper/10 px-4 py-2 text-sm font-bold backdrop-blur-md"
+            style={{ animationDelay: "900ms" }}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${status === "idle" ? "animate-pulse bg-sun" : "bg-primary"}`}
+            />
+            {heartLabel(status)}
+          </span>
+        </div>
+
+        <div className="grid gap-6 border-t border-paper/15 pt-6 sm:grid-cols-2 sm:items-end">
+          <p
+            className="animate-word-in max-w-md text-base leading-relaxed text-paper/75 sm:text-lg"
+            style={{ animationDelay: "600ms" }}
+          >
+            {description}
+          </p>
+          <div
+            className="animate-word-in pointer-events-auto flex flex-wrap gap-3 sm:justify-end"
+            style={{ animationDelay: "750ms" }}
+          >
+            <Magnetic>
+              <Link
+                to="/donate"
+                className="btn-pill inline-flex items-center gap-2 bg-sun px-7 py-4 text-base text-ink hover:bg-paper"
+              >
+                {donateLabel}
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Magnetic>
+            <a
+              href="tel:*3042"
+              className="btn-pill inline-flex items-center gap-2 border border-paper/40 px-7 py-4 text-base text-paper hover:bg-paper hover:text-ink"
+            >
+              <Phone className="h-4 w-4" />
+              {supportLabel}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function SectionHead({ n, label }: { n: string; label: string }) {
   return (
